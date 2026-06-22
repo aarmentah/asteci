@@ -1,0 +1,22 @@
+{
+  "name": "is-pep-base",
+  "method": "POST",
+  "path": "/api/v1/customers/is-pep",
+  "headers": {
+    "Content-Type": "application/json",
+    "x-b3-traceid": "1",
+    "x-b3-spanid": "1",
+    "x-channel-id": "1",
+    "x-originating-appl-code": "1",
+    "x-country-code": "1",
+    "x-user-context": "1",
+    "x-api-version": "1"
+  },
+  "body": {
+    "first_name": "ANDRES",
+    "second_name": "MANUEL",
+    "first_surname": "LOPEZ",
+    "second_surname": "OBRADOR",
+    "birthdate": "1953-11-13"
+  }
+}

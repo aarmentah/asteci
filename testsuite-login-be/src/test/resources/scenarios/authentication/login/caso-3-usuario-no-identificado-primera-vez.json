@@ -1,0 +1,48 @@
+{
+  "name": "caso-3-usuario-no-identificado-primera-vez",
+  "method": "POST",
+  "path": "/api/v1/authentication/login",
+  "headers": {
+    "Content-Type": "application/json",
+    "country-id": "MX",
+    "client": "SCOTIABANK-APP",
+    "client-type": "MOBILE",
+    "application": "AsTecIApp",
+    "remote-host": "192.168.1.100",
+    "log-date": "2026-05-20T19:41:40.360Z",
+    "time-zone": "America/Mexico_City",
+    "isp": "Telmex",
+    "city": "Pachuca",
+    "longitude": "-98.7591",
+    "latitude": "20.1011"
+  },
+  "body": {
+    "data": {
+      "login": {
+        "user_id": "noexiste@ejemplo.com"
+      }
+    }
+  },
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "status.status_code",
+        "equals": 200
+      },
+      {
+        "path": "data.type_case",
+        "equals": "UNIDENTIFIED USER"
+      },
+      {
+        "path": "data.subcase",
+        "is_null": true
+      },
+      {
+        "path": "data.user_id",
+        "not_empty": true
+      }
+    ]
+  }
+}

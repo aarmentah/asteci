@@ -1,0 +1,19 @@
+{
+  "name": "400-bad-request",
+  "method": "POST",
+  "path": "/api/v1/authentication/logout",
+  "headers": {
+    "Content-Type": "application/json",
+    "country-id": "MX"
+  },
+  "body": {
+    "data": {
+      "session_token": "",
+      "logout_type": 99
+    }
+  },
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true
+  }
+}

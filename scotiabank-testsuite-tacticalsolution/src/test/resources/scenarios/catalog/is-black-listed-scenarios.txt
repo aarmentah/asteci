@@ -1,0 +1,2 @@
+customer/is-black-listed/consulta-exitosa-no-en-lista-negra|Consulta exitosa — persona no en lista negra|smoke
+customer/is-black-listed/error-person-type-null|Error — person_type null|regression

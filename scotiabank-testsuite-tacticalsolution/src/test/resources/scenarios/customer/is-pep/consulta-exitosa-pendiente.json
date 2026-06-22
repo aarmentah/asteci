@@ -1,0 +1,18 @@
+{
+  "extends": "customer/is-pep/_base",
+  "name": "consulta-exitosa-pendiente",
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data",
+        "not_empty": true
+      },
+      {
+        "path": "notifications.size()",
+        "equals": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+customer/is-pep/error-no-encontrado|Error — persona no encontrada (E_CLV_GN_002)|smoke
+# TODO: descomentar cuando se tenga response de éxito confirmado
+# customer/is-pep/consulta-exitosa-pendiente|Consulta exitosa — persona PEP (pendiente)|smoke

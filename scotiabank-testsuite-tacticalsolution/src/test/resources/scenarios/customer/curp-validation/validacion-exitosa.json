@@ -1,0 +1,58 @@
+{
+  "extends": "customer/curp-validation/_base",
+  "name": "validacion-exitosa",
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data.name",
+        "equals": "CRISTINA CAROLINA"
+      },
+      {
+        "path": "data.last_name",
+        "equals": "PEREZ"
+      },
+      {
+        "path": "data.second_last_name",
+        "equals": "GUEVARA"
+      },
+      {
+        "path": "data.gender",
+        "equals": "M"
+      },
+      {
+        "path": "data.birthdate",
+        "equals": "1988-03-13"
+      },
+      {
+        "path": "data.nacionality",
+        "equals": "MEX"
+      },
+      {
+        "path": "data.birth_state_id",
+        "equals": "DF"
+      },
+      {
+        "path": "data.valid_curp",
+        "equals": true
+      },
+      {
+        "path": "data.status_curp",
+        "equals": "AN"
+      },
+      {
+        "path": "data.response_code_ccb",
+        "equals": "CRGEN000"
+      },
+      {
+        "path": "data.response_description_ccb",
+        "equals": "El proceso de validación se ha realizado exitosamente."
+      },
+      {
+        "path": "notifications.size()",
+        "equals": 0
+      }
+    ]
+  }
+}

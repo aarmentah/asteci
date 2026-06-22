@@ -1,0 +1,23 @@
+{
+  "name": "is-black-listed-base",
+  "method": "POST",
+  "path": "/api/v1/customers/is-black-listed",
+  "headers": {
+    "Content-Type": "application/json",
+    "x-b3-traceid": "1",
+    "x-b3-spanid": "1",
+    "x-channel-id": "1",
+    "x-originating-appl-code": "1",
+    "x-country-code": "1",
+    "x-user-context": "1",
+    "x-api-version": "1"
+  },
+  "body": {
+    "person_type": "2",
+    "names": "RUBEN",
+    "first_surname": "ORTEGA",
+    "second_surname": "TELLO",
+    "birth_date": "1943-11-23",
+    "rfc": "OETR250613BCC"
+  }
+}

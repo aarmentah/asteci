@@ -1,0 +1,35 @@
+{
+  "name": "header-city-en-blanco",
+  "method": "POST",
+  "path": "/api/v1/authentication/password",
+  "headers": {
+    "Content-Type": "application/json",
+    "client": "SCOTIABANK-APP",
+    "client-type": "MOBILE",
+    "application": "AsTecIApp",
+    "remote-host": "192.168.1.100",
+    "log-date": "2026-05-20T19:41:40.360Z",
+    "time-zone": "America/Mexico_City",
+    "isp": "Telmex",
+    "longitude": "-99.1332",
+    "latitude": "19.4326",
+    "country-id": "MX"
+  },
+  "body": {
+    "data": {
+      "flow_type": "normal",
+      "user_id": "user@example.com",
+      "password": "mCMsNIDWcAnHZESAzIoQFg=="
+    }
+  },
+  "expected": {
+    "statusCode": 400,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "status.status_code",
+        "equals": 400
+      }
+    ]
+  }
+}

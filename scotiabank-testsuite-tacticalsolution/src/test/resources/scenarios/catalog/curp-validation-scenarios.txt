@@ -1,0 +1,2 @@
+customer/curp-validation/validacion-exitosa|Validación exitosa de CURP|smoke
+customer/curp-validation/error-curp-formato-invalido|Error — CURP con formato inválido|regression

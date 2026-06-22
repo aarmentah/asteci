@@ -1,0 +1,22 @@
+{
+  "extends": "customer/is-pep/_base",
+  "name": "error-no-encontrado",
+  "expected": {
+    "statusCode": 404,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data",
+        "is_null": true
+      },
+      {
+        "path": "notifications[0].code",
+        "equals": "E_CLV_GN_002"
+      },
+      {
+        "path": "notifications[0].message",
+        "equals": "Not found"
+      }
+    ]
+  }
+}

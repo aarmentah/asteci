@@ -1,0 +1,30 @@
+{
+  "extends": "customer/curp-validation/_base",
+  "name": "error-curp-formato-invalido",
+  "body": {
+    "curp": "INVALID",
+    "request_id": "CUAC01726763563935"
+  },
+  "expected": {
+    "statusCode": 400,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data",
+        "is_null": true
+      },
+      {
+        "path": "notifications[0].code",
+        "equals": "E_CLV_VL_001"
+      },
+      {
+        "path": "notifications[0].message",
+        "contains": "curp"
+      },
+      {
+        "path": "notifications[0].message",
+        "contains": "must match"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+authentication/login/caso-1-usuario-identificado-activo|Caso 1 — Usuario identificado ACTIVO|smoke
+authentication/login/caso-2-usuario-identificado-inactivo|Caso 2 — Usuario identificado INACTIVO|regression
+authentication/login/caso-3-usuario-no-identificado-primera-vez|Caso 3 — Usuario NO identificado (primera vez)|regression
+authentication/login/caso-4-usuario-no-identificado-y-en-lista-denegada|Caso 4 — Usuario NO identificado y en lista denegada|regression
+authentication/login/caso-5-usuario-suspendido|Caso 5 — Usuario SUSPENDIDO|regression
+authentication/login/caso-6-usuario-bloqueado|Caso 6 — Usuario BLOQUEADO|regression
+authentication/login/caso-7-proceso-suspendido-usuario-no-identificado|Caso 7 — Proceso SUSPENDIDO (usuario no identificado)|regression
+authentication/login/caso-8-usuario-con-sesi-n-activa|Caso 8 — Usuario con SESIÓN ACTIVA|regression
+authentication/login/error-header-country-id-faltante|Error — Header country-id faltante|regression
+authentication/login/error-header-client-faltante|Error — Header client faltante|regression
+authentication/login/error-header-client-type-faltante|Error — Header client-type faltante|regression
+authentication/login/error-header-application-faltante|Error — Header application faltante|regression
+authentication/login/error-header-remote-host|Error — Header remote-host|regression
+authentication/login/error-header-log-date|Error — Header log-date|regression
+authentication/login/error-header-time-zone-faltante|Error — Header time-zone faltante|regression
+authentication/login/error-header-isp-faltante|Error — Header isp-faltante|regression
+authentication/login/error-header-city-en-blanco|Error — Header city en blanco|regression
+authentication/login/error-header-longitude|Error — Header longitude|regression
+authentication/login/error-header-latitude|Error — Header latitude|regression
+authentication/login/error-user-id-en-blanco|Error — user_id en blanco|regression
+authentication/login/error-body-vac-o|Error — Body vacío|regression

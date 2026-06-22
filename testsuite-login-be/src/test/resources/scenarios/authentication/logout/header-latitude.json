@@ -1,0 +1,34 @@
+{
+  "name": "header-latitude",
+  "method": "POST",
+  "path": "/api/v1/authentication/logout",
+  "headers": {
+    "Content-Type": "application/json",
+    "client": "SCOTIABANK-APP",
+    "client-type": "MOBILE",
+    "application": "AsTecIApp",
+    "remote-host": "192.168.1.100",
+    "log-date": "2026-05-20T19:41:40.360Z",
+    "time-zone": "America/Mexico_City",
+    "isp": "Telmex",
+    "longitude": "-98.7591",
+    "latitude": "20.1011",
+    "country-id": "MX"
+  },
+  "body": {
+    "data": {
+      "session_token": "sk00000000000000000000000000006",
+      "logout_type": 1
+    }
+  },
+  "expected": {
+    "statusCode": 400,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "status.status_code",
+        "equals": 400
+      }
+    ]
+  }
+}

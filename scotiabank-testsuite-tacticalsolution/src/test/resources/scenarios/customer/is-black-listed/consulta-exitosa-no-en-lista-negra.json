@@ -1,0 +1,30 @@
+{
+  "extends": "customer/is-black-listed/_base",
+  "name": "consulta-exitosa-no-en-lista-negra",
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data.is_black_list",
+        "equals": false
+      },
+      {
+        "path": "data.reason",
+        "equals": "NOT_FOUND"
+      },
+      {
+        "path": "notifications[0].code",
+        "equals": "I_CLV_OK_001"
+      },
+      {
+        "path": "notifications[0].message",
+        "equals": "Success operation"
+      },
+      {
+        "path": "notifications.size()",
+        "equals": 1
+      }
+    ]
+  }
+}

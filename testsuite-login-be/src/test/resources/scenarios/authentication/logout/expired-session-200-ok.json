@@ -1,0 +1,25 @@
+{
+  "name": "expired-session-200-ok",
+  "method": "POST",
+  "path": "/api/v1/authentication/logout",
+  "headers": {
+    "Content-Type": "application/json",
+    "country-id": "MX",
+    "client": "SCOTIABANK-APP",
+    "client-type": "MOBILE",
+    "application": "AsTecIApp",
+    "remote-host": "192.168.1.100",
+    "log-date": "2026-05-20T19:41:40.360Z",
+    "time-zone": "America/Mexico_City"
+  },
+  "body": {
+    "data": {
+      "session_token": "sk00000000000000000000000000006",
+      "logout_type": 2
+    }
+  },
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true
+  }
+}

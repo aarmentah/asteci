@@ -1,0 +1,19 @@
+{
+  "name": "curp-validation-base",
+  "method": "POST",
+  "path": "/api/v1/customers/curp-validation",
+  "headers": {
+    "Content-Type": "application/json",
+    "x-b3-traceid": "1",
+    "x-b3-spanid": "1",
+    "x-channel-id": "1",
+    "x-originating-appl-code": "1",
+    "x-country-code": "1",
+    "x-user-context": "1",
+    "x-api-version": "1"
+  },
+  "body": {
+    "curp": "PEGC880313MDFRVR03",
+    "request_id": "CUAC01726763563935"
+  }
+}

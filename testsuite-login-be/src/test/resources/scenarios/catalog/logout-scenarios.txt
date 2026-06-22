@@ -1,0 +1,14 @@
+authentication/logout/cierre-manual-con-estatus-200-ok|Cierre Manual con estatus 200 OK|smoke
+authentication/logout/expired-session-200-ok|Expired Session 200 OK|regression
+authentication/logout/400-bad-request|400 Bad Request|regression
+authentication/logout/header-country-id-faltante|Header country-id faltante|regression
+authentication/logout/header-client-faltante|Header client faltante|regression
+authentication/logout/header-client-type-faltante|Header client-type faltante|regression
+authentication/logout/header-application-faltante|Header application faltante|regression
+authentication/logout/header-remote-host|Header remote-host|regression
+authentication/logout/header-log-date|Header log-date|regression
+authentication/logout/header-time-zone-faltante|Header time-zone faltante|regression
+authentication/logout/header-isp-faltante|Header isp-faltante|regression
+authentication/logout/header-city-en-blanco|Header city en blanco|regression
+authentication/logout/header-latitude|Header latitude|regression
+authentication/logout/header-longitude|Header longitude|regression
