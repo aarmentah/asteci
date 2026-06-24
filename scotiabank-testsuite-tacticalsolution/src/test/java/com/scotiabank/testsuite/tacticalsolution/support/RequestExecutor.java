@@ -1,6 +1,5 @@
 package com.scotiabank.testsuite.tacticalsolution.support;
 
-import com.scotiabank.testsuite.tacticalsolution.config.TestConfig;
 import com.scotiabank.testsuite.tacticalsolution.model.ApiScenario;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.response.ValidatableResponse;
@@ -46,8 +45,8 @@ public final class RequestExecutor {
         if (scenario.getHeaders().containsKey("Authorization")) {
             return;
         }
-        String token = TestConfig.get("api.access.token", "");
-        if (!token.isBlank() && !"replace-with-valid-bearer-token".equals(token)) {
+        String token = AccessTokenProvider.resolve();
+        if (!token.isBlank()) {
             request.header("Authorization", "Bearer " + token);
         }
     }

@@ -12,7 +12,34 @@ mvn test -Dgroups=smoke          # solo casos marcados smoke en catalog/*.txt
 mvn allure:serve                # requiere Allure CLI
 ```
 
-Con token y URL del ambiente:
+Con URL del ambiente y token automático vía Passport:
+
+```bash
+API_BASE_URI=https://ibbaas-customer-validation-mx.example.com \
+PASSPORT_BASE_URL=https://passport.example.com \
+./scripts/run-tests.sh
+```
+
+Passport responde con un GET a `/48cf7cec-2dfe-4695-a3b1-eb423fc6418c` (equivalente al curl de Postman):
+
+```bash
+curl --location --globoff '{{passport-base-url}}/48cf7cec-2dfe-4695-a3b1-eb423fc6418c'
+```
+
+Respuesta esperada (OAuth2):
+
+```json
+{
+  "access_token": "eyJ...",
+  "scope": "customer.validation.ib.bcs.read ...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+El framework lee `access_token` y envía `Authorization: Bearer <token>` en las 3 HU.
+
+También puedes pasar el token manualmente (tiene prioridad sobre Passport):
 
 ```bash
 API_BASE_URI=https://ibbaas-customer-validation-mx.example.com \
@@ -25,9 +52,12 @@ Configura en `src/test/resources/application.properties`:
 ```properties
 api.base.uri=http://localhost:8080
 api.access.token=replace-with-valid-bearer-token
+
+passport.base.uri=https://passport.example.com
+passport.token.path=/48cf7cec-2dfe-4695-a3b1-eb423fc6418c
 ```
 
-También puedes sobreescribir vía JVM: `-Dapi.base.uri=... -Dapi.access.token=...`
+También puedes sobreescribir vía JVM: `-Dapi.base.uri=... -Dpassport.base.uri=... -Dapi.access.token=...`
 
 ## Historias de usuario
 
@@ -44,7 +74,9 @@ También puedes sobreescribir vía JVM: `-Dapi.base.uri=... -Dapi.access.token=.
 | Headers/body comunes del curl | `scenarios/customer/<hu>/_base.json` |
 | Un solo campo (ej. `curp`, `person_type`) | JSON con `"extends": "customer/<hu>/_base"` y solo el delta |
 | Curl completo distinto | JSON nuevo **sin** `extends` |
-| URL del servidor / token | `application.properties` o variables de entorno |
+| URL del servidor | `application.properties` o `API_BASE_URI` |
+| Token manual | `api.access.token` o `API_ACCESS_TOKEN` |
+| Token automático (Passport) | `passport.base.uri` o `PASSPORT_BASE_URL` |
 | Aserciones / flujo | Clase de test (`HUCurpValidation`) |
 
 ## Escenarios JSON (HU curp-validation)
@@ -167,7 +199,7 @@ curl --location --globoff '{{ibbaas_cusotmer_validation_mx_host}}/api/v1/custome
   }'
 ```
 
-El header `Authorization` se inyecta automáticamente desde `api.access.token` si no está definido en el JSON del escenario.
+El header `Authorization` se inyecta automáticamente si no está definido en el JSON del escenario. Prioridad: `api.access.token` manual → token obtenido de Passport (`passport.base.uri` + `passport.token.path`).
 
 ## Ajustar códigos HTTP esperados
 
