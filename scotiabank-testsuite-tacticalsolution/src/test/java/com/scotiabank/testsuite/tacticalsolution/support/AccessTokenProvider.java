@@ -24,11 +24,13 @@ public final class AccessTokenProvider {
         String manualToken = TestConfig.get("api.access.token", "");
         if (isUsableToken(manualToken)) {
             cachedToken = manualToken;
+            logResolvedToken("api.access.token", cachedToken);
             return cachedToken;
         }
 
         String passportBaseUri = TestConfig.get("passport.base.uri", "");
         if (passportBaseUri.isBlank()) {
+            System.out.println("[AccessTokenProvider] Sin token: configura api.access.token o passport.base.uri");
             return "";
         }
 
@@ -36,6 +38,7 @@ public final class AccessTokenProvider {
                 "passport.token.path",
                 "/48cf7cec-2dfe-4695-a3b1-eb423fc6418c");
         String tokenUrl = joinUrl(passportBaseUri, tokenPath);
+        System.out.println("[AccessTokenProvider] Solicitando token a Passport: " + tokenUrl);
 
         Response response = given()
                 .redirects()
@@ -52,7 +55,19 @@ public final class AccessTokenProvider {
             throw new IllegalStateException(
                     "Passport no devolvió un token válido desde: " + tokenUrl);
         }
+        logResolvedToken("Passport", cachedToken);
         return cachedToken;
+    }
+
+    private static void logResolvedToken(String source, String token) {
+        System.out.println("[AccessTokenProvider] Token recuperado (" + source + "): " + maskToken(token));
+    }
+
+    private static String maskToken(String token) {
+        if (token.length() <= 20) {
+            return "***";
+        }
+        return token.substring(0, 12) + "..." + token.substring(token.length() - 8);
     }
 
     static void resetCache() {
