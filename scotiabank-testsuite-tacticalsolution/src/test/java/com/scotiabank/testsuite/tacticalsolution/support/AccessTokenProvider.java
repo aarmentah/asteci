@@ -50,7 +50,10 @@ public final class AccessTokenProvider {
                 .extract()
                 .response();
 
-        cachedToken = extractToken(response.asString());
+        String responseBody = response.asString();
+        logPassportResponse(responseBody);
+
+        cachedToken = extractToken(responseBody);
         if (!isUsableToken(cachedToken)) {
             throw new IllegalStateException(
                     "Passport no devolvió un token válido desde: " + tokenUrl);
@@ -61,6 +64,16 @@ public final class AccessTokenProvider {
 
     private static void logResolvedToken(String source, String token) {
         System.out.println("[AccessTokenProvider] Token recuperado (" + source + "): " + maskToken(token));
+    }
+
+    private static void logPassportResponse(String body) {
+        try {
+            Object json = OBJECT_MAPPER.readValue(body, Object.class);
+            String pretty = OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            System.out.println("[AccessTokenProvider] Response Passport:\n" + pretty);
+        } catch (Exception ignored) {
+            System.out.println("[AccessTokenProvider] Response Passport: " + body);
+        }
     }
 
     private static String maskToken(String token) {
