@@ -16,6 +16,10 @@ public final class TestConfig {
         if (systemValue != null && !systemValue.isBlank()) {
             return systemValue.trim();
         }
+        String envValue = envFor(key);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue.trim();
+        }
         String value = PROPERTIES.getProperty(key);
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Propiedad no definida: " + key);
@@ -28,8 +32,22 @@ public final class TestConfig {
         if (systemValue != null && !systemValue.isBlank()) {
             return systemValue.trim();
         }
+        String envValue = envFor(key);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue.trim();
+        }
         String value = PROPERTIES.getProperty(key, defaultValue);
         return value == null ? defaultValue : value.trim();
+    }
+
+    private static String envFor(String key) {
+        return switch (key) {
+            case "api.base.uri" -> System.getenv("API_BASE_URI");
+            case "api.access.token" -> System.getenv("API_ACCESS_TOKEN");
+            case "passport.base.uri" -> System.getenv("PASSPORT_BASE_URL");
+            case "passport.token.path" -> System.getenv("PASSPORT_TOKEN_PATH");
+            default -> null;
+        };
     }
 
     private static Properties load() {

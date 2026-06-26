@@ -43,11 +43,15 @@ public final class RequestExecutor {
 
     private static void applyAuthorizationIfNeeded(RequestSpecification request, ApiScenario scenario) {
         if (scenario.getHeaders().containsKey("Authorization")) {
+            System.out.println("[RequestExecutor] Authorization ya viene en el escenario JSON, no se inyecta");
             return;
         }
         String token = AccessTokenProvider.resolve();
         if (!token.isBlank()) {
             request.header("Authorization", "Bearer " + token);
+            System.out.println("[RequestExecutor] Authorization inyectado en " + scenario.getMethod() + " " + scenario.getPath());
+            return;
         }
+        System.out.println("[RequestExecutor] SIN Authorization: token vacío en " + scenario.getMethod() + " " + scenario.getPath());
     }
 }
