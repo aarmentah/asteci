@@ -99,7 +99,7 @@ public final class ResponseAssertions {
             response.body(path, not(empty()));
         }
         if (assertion.getGreaterThan() != null) {
-            response.body(path, greaterThan(assertion.getGreaterThan()));
+            response.body(path, greaterThan(assertion.getGreaterThan().intValue()));
         }
         if (Boolean.TRUE.equals(assertion.getIsNull())) {
             response.body(path, nullValue());
