@@ -6,8 +6,52 @@
     "expect_json": true,
     "body_assertions": [
       {
-        "path": "data",
-        "not_empty": true
+        "path": "data.size()",
+        "greater_than": 0
+      },
+      {
+        "path": "data[0].basic_information.customer_type",
+        "equals": "Person"
+      },
+      {
+        "path": "data[0].basic_information.customer_display_id",
+        "equals": "506332943"
+      },
+      {
+        "path": "data[0].basic_information.individual.first_given_name",
+        "equals": "GREGORIO"
+      },
+      {
+        "path": "data[0].basic_information.individual.second_given_name",
+        "equals": "ARTURO"
+      },
+      {
+        "path": "data[0].basic_information.individual.first_last_name",
+        "equals": "JIMENEZ"
+      },
+      {
+        "path": "data[0].basic_information.individual.second_last_name",
+        "equals": "GARCIA"
+      },
+      {
+        "path": "data[0].basic_information.customer_segment_desc",
+        "equals": "MENUDEO"
+      },
+      {
+        "path": "data[0].identifications[0].identification_no",
+        "equals": "JIGG9209254W9"
+      },
+      {
+        "path": "data[0].origination.branch_name",
+        "equals": "CUAJIMALPA"
+      },
+      {
+        "path": "data[0].address.country.country_cd",
+        "equals": "MX"
+      },
+      {
+        "path": "data[0].address.country.description",
+        "equals": "MEXICO"
       }
     ]
   }

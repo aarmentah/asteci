@@ -36,6 +36,10 @@ public final class ScenarioPreparer {
                 "Obtener token (" + tokenProfile.id() + ")",
                 () -> AccessTokenProvider.resolve(tokenProfile));
 
+        if (!accessToken.isBlank()) {
+            prepared.withHeader("Authorization", "Bearer " + accessToken);
+        }
+
         Map<String, String> resolvedSurrogates = resolveSurrogates(setup, accessToken);
         prepared.setHeaders(replacePlaceholders(prepared.getHeaders(), resolvedSurrogates));
         prepared.setQueryParams(replacePlaceholders(prepared.getQueryParams(), resolvedSurrogates));

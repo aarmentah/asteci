@@ -16,6 +16,9 @@ public class BodyAssertion {
     @JsonProperty("not_empty")
     private Boolean notEmpty;
 
+    @JsonProperty("greater_than")
+    private Number greaterThan;
+
     @JsonProperty("is_null")
     private Boolean isNull;
 
@@ -63,6 +66,14 @@ public class BodyAssertion {
 
     public void setNotEmpty(Boolean notEmpty) {
         this.notEmpty = notEmpty;
+    }
+
+    public Number getGreaterThan() {
+        return greaterThan;
+    }
+
+    public void setGreaterThan(Number greaterThan) {
+        this.greaterThan = greaterThan;
     }
 
     public Boolean getIsNull() {

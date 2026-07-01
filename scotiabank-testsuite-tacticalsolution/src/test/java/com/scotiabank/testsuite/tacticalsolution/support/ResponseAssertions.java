@@ -14,8 +14,10 @@ import java.util.List;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -94,7 +96,10 @@ public final class ResponseAssertions {
             response.body(path, containsStringIgnoringCase(assertion.getContainsIgnoreCase()));
         }
         if (Boolean.TRUE.equals(assertion.getNotEmpty())) {
-            response.body(path, not(emptyOrNullString()));
+            response.body(path, not(empty()));
+        }
+        if (assertion.getGreaterThan() != null) {
+            response.body(path, greaterThan(assertion.getGreaterThan()));
         }
         if (Boolean.TRUE.equals(assertion.getIsNull())) {
             response.body(path, nullValue());
