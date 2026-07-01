@@ -1,1 +1,1 @@
-customer/customer-lookup/consulta-exitosa-rfc smoke
+customer/customer-lookup/consulta-exitosa-rfc|Consulta exitosa por RFC|smoke

@@ -1,2 +1,2 @@
-customer/customer-summary/customers/consulta-exitosa smoke
-customer/customer-summary/cards/consulta-exitosa smoke
+customer/customer-summary/customers/consulta-exitosa|Consulta exitosa customers|smoke
+customer/customer-summary/cards/consulta-exitosa|Consulta exitosa cards|smoke
