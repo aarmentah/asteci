@@ -1,0 +1,14 @@
+{
+  "extends": "customer/customer-summary/_headers-base",
+  "name": "customer-summary-customers-base",
+  "path": "/api/v1/summary/customers/",
+  "queryParams": {
+    "client_id": "{{surrogate:client_id}}"
+  },
+  "setup": {
+    "token_profile": "customer-summary",
+    "surrogate_keys": {
+      "client_id": "505330355"
+    }
+  }
+}

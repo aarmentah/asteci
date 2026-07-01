@@ -46,12 +46,21 @@ public final class RequestExecutor {
             System.out.println("[RequestExecutor] Authorization ya viene en el escenario JSON, no se inyecta");
             return;
         }
-        String token = AccessTokenProvider.resolve();
+        String token = AccessTokenProvider.resolve(resolveTokenProfile(scenario));
         if (!token.isBlank()) {
             request.header("Authorization", "Bearer " + token);
             System.out.println("[RequestExecutor] Authorization inyectado en " + scenario.getMethod() + " " + scenario.getPath());
             return;
         }
         System.out.println("[RequestExecutor] SIN Authorization: token vacío en " + scenario.getMethod() + " " + scenario.getPath());
+    }
+
+    private static TokenProfile resolveTokenProfile(ApiScenario scenario) {
+        if (scenario.getSetup() == null
+                || scenario.getSetup().getTokenProfile() == null
+                || scenario.getSetup().getTokenProfile().isBlank()) {
+            return TokenProfile.DEFAULT;
+        }
+        return TokenProfile.fromId(scenario.getSetup().getTokenProfile());
     }
 }

@@ -5,40 +5,53 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scotiabank.testsuite.tacticalsolution.config.TestConfig;
 import io.restassured.response.Response;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import static io.restassured.RestAssured.given;
 
 public final class AccessTokenProvider {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String PLACEHOLDER_TOKEN = "replace-with-valid-bearer-token";
-    private static volatile String cachedToken;
+    private static final Map<String, String> CACHE = new ConcurrentHashMap<>();
 
     private AccessTokenProvider() {
     }
 
     public static String resolve() {
-        if (cachedToken != null) {
-            return cachedToken;
+        return resolve(TokenProfile.DEFAULT);
+    }
+
+    public static String resolve(TokenProfile profile) {
+        String cacheKey = profile.id();
+        String cached = CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
         }
 
-        String manualToken = TestConfig.get("api.access.token", "");
+        String manualToken = TestConfig.get(profile.manualTokenKey(), "");
         if (isUsableToken(manualToken)) {
-            cachedToken = manualToken;
-            logResolvedToken("api.access.token", cachedToken);
-            return cachedToken;
+            CACHE.put(cacheKey, manualToken);
+            logResolvedToken(profile.id(), profile.manualTokenKey(), manualToken);
+            return manualToken;
         }
 
-        String passportBaseUri = TestConfig.get("passport.base.uri", "");
+        String passportBaseUri = TestConfig.get(profile.passportBaseUriKey(), "");
         if (passportBaseUri.isBlank()) {
-            System.out.println("[AccessTokenProvider] Sin token: configura api.access.token o passport.base.uri");
+            System.out.println("[AccessTokenProvider] Sin token para perfil "
+                    + profile.id() + ": configura " + profile.manualTokenKey()
+                    + " o " + profile.passportBaseUriKey());
             return "";
         }
 
-        String tokenPath = TestConfig.get(
-                "passport.token.path",
-                "/48cf7cec-2dfe-4695-a3b1-eb423fc6418c");
+        String tokenPath = TestConfig.get(profile.passportTokenPathKey(), "");
+        if (tokenPath.isBlank()) {
+            throw new IllegalStateException("Propiedad requerida vacía: " + profile.passportTokenPathKey());
+        }
+
         String tokenUrl = joinUrl(passportBaseUri, tokenPath);
-        System.out.println("[AccessTokenProvider] Solicitando token a Passport: " + tokenUrl);
+        System.out.println("[AccessTokenProvider] Solicitando token (" + profile.id() + "): " + tokenUrl);
 
         Response response = given()
                 .redirects()
@@ -53,17 +66,19 @@ public final class AccessTokenProvider {
         String responseBody = response.asString();
         logPassportResponse(responseBody);
 
-        cachedToken = extractToken(responseBody);
-        if (!isUsableToken(cachedToken)) {
+        String token = extractToken(responseBody);
+        if (!isUsableToken(token)) {
             throw new IllegalStateException(
-                    "Passport no devolvió un token válido desde: " + tokenUrl);
+                    "Passport no devolvió un token válido para perfil " + profile.id() + " desde: " + tokenUrl);
         }
-        logResolvedToken("Passport", cachedToken);
-        return cachedToken;
+        CACHE.put(cacheKey, token);
+        logResolvedToken(profile.id(), "Passport", token);
+        return token;
     }
 
-    private static void logResolvedToken(String source, String token) {
-        System.out.println("[AccessTokenProvider] Token recuperado (" + source + "): " + maskToken(token));
+    private static void logResolvedToken(String profileId, String source, String token) {
+        System.out.println("[AccessTokenProvider] Token recuperado ("
+                + profileId + ", " + source + "): " + maskToken(token));
     }
 
     private static void logPassportResponse(String body) {
@@ -84,7 +99,7 @@ public final class AccessTokenProvider {
     }
 
     static void resetCache() {
-        cachedToken = null;
+        CACHE.clear();
     }
 
     private static boolean isUsableToken(String token) {

@@ -21,6 +21,7 @@ public class ApiScenario {
     private Map<String, String> queryParams = new LinkedHashMap<>();
     private Map<String, String> pathParams = new LinkedHashMap<>();
     private Object body;
+    private ScenarioSetup setup;
     private ExpectedResponse expected;
 
     public ApiScenario copy() {
@@ -34,6 +35,7 @@ public class ApiScenario {
         copy.queryParams = new LinkedHashMap<>(queryParams);
         copy.pathParams = new LinkedHashMap<>(pathParams);
         copy.body = body;
+        copy.setup = setup;
         copy.expected = expected;
         return copy;
     }
@@ -116,6 +118,14 @@ public class ApiScenario {
 
     public void setExpected(ExpectedResponse expected) {
         this.expected = expected;
+    }
+
+    public ScenarioSetup getSetup() {
+        return setup;
+    }
+
+    public void setSetup(ScenarioSetup setup) {
+        this.setup = setup;
     }
 
     @JsonIgnore

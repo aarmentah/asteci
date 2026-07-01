@@ -1,0 +1,27 @@
+{
+  "name": "customer-lookup-base",
+  "method": "POST",
+  "path": "/api/v1/customers/lookup",
+  "baseUri": "${customer.lookup.api.base.uri}",
+  "setup": {
+    "token_profile": "customer-lookup",
+    "surrogate_keys": {
+      "client_id": "505343857"
+    }
+  },
+  "headers": {
+    "Content-Type": "application/json",
+    "x-b3-traceid": "23123",
+    "x-b3-spanid": "41200de3d3e82a81",
+    "x-country-code": "MX",
+    "x-channel-id": "LRE",
+    "x-originating-appl-code": "BDMS",
+    "channel-id": "1bbfa1e8-6b0a-4a4e-9158-3f24edbfe006"
+  },
+  "body": {
+    "identification": {
+      "identification_no": "JIGG9209254W9",
+      "identification_type": "RFC"
+    }
+  }
+}

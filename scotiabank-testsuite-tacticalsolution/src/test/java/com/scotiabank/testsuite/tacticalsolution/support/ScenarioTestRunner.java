@@ -9,7 +9,7 @@ public final class ScenarioTestRunner {
     }
 
     public static void run(String scenarioPath) {
-        ApiScenario scenario = ScenarioLoader.load(scenarioPath);
+        ApiScenario scenario = ScenarioPreparer.prepare(ScenarioLoader.load(scenarioPath));
 
         Allure.label("scenario", scenarioPath);
         Allure.label("tag", scenario.getName());

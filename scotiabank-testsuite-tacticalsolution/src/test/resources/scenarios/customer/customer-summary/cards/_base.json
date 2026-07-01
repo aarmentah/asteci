@@ -1,0 +1,14 @@
+{
+  "extends": "customer/customer-summary/_headers-base",
+  "name": "customer-summary-cards-base",
+  "path": "/api/v1/summary/cards/",
+  "queryParams": {
+    "card_id": "{{surrogate:card_id}}"
+  },
+  "setup": {
+    "token_profile": "customer-summary",
+    "surrogate_keys": {
+      "card_id": "4918719086012802"
+    }
+  }
+}

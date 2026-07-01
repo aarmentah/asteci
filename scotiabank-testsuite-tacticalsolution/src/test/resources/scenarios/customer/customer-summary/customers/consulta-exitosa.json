@@ -1,0 +1,14 @@
+{
+  "extends": "customer/customer-summary/customers/_base",
+  "name": "consulta-customers-exitosa",
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data",
+        "not_empty": true
+      }
+    ]
+  }
+}

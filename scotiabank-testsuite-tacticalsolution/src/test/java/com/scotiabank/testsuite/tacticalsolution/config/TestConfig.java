@@ -46,6 +46,16 @@ public final class TestConfig {
             case "api.access.token" -> System.getenv("API_ACCESS_TOKEN");
             case "passport.base.uri" -> System.getenv("PASSPORT_BASE_URL");
             case "passport.token.path" -> System.getenv("PASSPORT_TOKEN_PATH");
+            case "customer.summary.api.base.uri" -> System.getenv("CUSTOMER_SUMMARY_API_BASE_URI");
+            case "customer.summary.api.access.token" -> System.getenv("CUSTOMER_SUMMARY_API_ACCESS_TOKEN");
+            case "customer.summary.passport.base.uri" -> System.getenv("CUSTOMER_SUMMARY_PASSPORT_BASE_URL");
+            case "customer.summary.passport.token.path" -> System.getenv("CUSTOMER_SUMMARY_PASSPORT_TOKEN_PATH");
+            case "customer.lookup.api.base.uri" -> System.getenv("CUSTOMER_LOOKUP_API_BASE_URI");
+            case "customer.lookup.api.access.token" -> System.getenv("CUSTOMER_LOOKUP_API_ACCESS_TOKEN");
+            case "customer.lookup.passport.base.uri" -> System.getenv("CUSTOMER_LOOKUP_PASSPORT_BASE_URL");
+            case "customer.lookup.passport.token.path" -> System.getenv("CUSTOMER_LOOKUP_PASSPORT_TOKEN_PATH");
+            case "keymaster.base.uri" -> System.getenv("KEYMASTER_BASE_URI");
+            case "keymaster.surrogate.path" -> System.getenv("KEYMASTER_SURROGATE_PATH");
             default -> null;
         };
     }

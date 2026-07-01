@@ -1,0 +1,14 @@
+{
+  "extends": "customer/customer-lookup/_base",
+  "name": "consulta-exitosa-rfc",
+  "expected": {
+    "statusCode": 200,
+    "expect_json": true,
+    "body_assertions": [
+      {
+        "path": "data",
+        "not_empty": true
+      }
+    ]
+  }
+}

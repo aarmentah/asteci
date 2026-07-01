@@ -1,0 +1,13 @@
+{
+  "name": "customer-summary-headers-base",
+  "method": "GET",
+  "baseUri": "${customer.summary.api.base.uri}",
+  "headers": {
+    "x-b3-traceid": "41200de3d3e82a81",
+    "x-b3-spanid": "41200de3d3e82a81",
+    "x-country-code": "MX",
+    "x-channel-id": "LRE",
+    "x-originating-appl-code": "BDMS",
+    "channel-id": "1bbfa1e8-6b0a-4a4e-9158-3f24edbfe006"
+  }
+}
