@@ -1,0 +1,479 @@
+﻿ID Escenario,HU,Escenario,Precondición,Paso,Action,Data,Expected Result
+TC-001,HU_01,Recepción de correo con Excel válido en buzón seguro,Buzón seguro de pre-registro configurado y activo. Layout Excel válido con al menos 1 registro completo y correcto en los 10 campos.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-001,HU_01,Recepción de correo con Excel válido en buzón seguro,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Archivo layout con insumos válidos (cuentas activas),"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-001,HU_01,Recepción de correo con Excel válido en buzón seguro,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-001,HU_01,Recepción de correo con Excel válido en buzón seguro,,4,Verificar en base de datos / reporte de resultado que el archivo fue identificado como candidato y pasó a validación de layout.,Folio generado,El archivo se marca como candidato a procesamiento y continúa a validación de estructura y registros
+TC-002,HU_01,Rechazo de archivo adjunto que no es Excel,"Correo enviado al buzón seguro con un archivo adjunto en formato distinto a Excel (ej. PDF, .txt).",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-002,HU_01,Rechazo de archivo adjunto que no es Excel,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Archivo adjunto en formato .pdf o .txt (no Excel),"El sistema rechaza el procesamiento, responde con un mensaje de error genérico de sistema y registra como motivo ""formato de archivo no soportado"". No se genera notificación de correo al remitente."
+TC-003,HU_01,Correo sin archivo adjunto,Correo enviado al buzón seguro sin ningún archivo adjunto.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-003,HU_01,Correo sin archivo adjunto,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Sin archivo adjunto (body vacío),"El sistema no identifica archivo candidato a procesamiento; responde error genérico de sistema, sin notificación de correo"
+TC-004,HU_01,Correo proveniente de un origen distinto al buzón seguro,Se envía el layout válido desde una casilla de correo distinta a la configurada como buzón seguro.,1,Enviar el correo con el layout adjunto desde una cuenta de correo distinta al buzón seguro autorizado.,"Layout válido, remitente no autorizado",El sistema ignora el correo; no se genera ningún procesamiento ni notificación
+TC-005,HU_01,Layout con los 10 campos obligatorios/opcionales y longitudes correctas,"Layout Excel con 1 registro que contiene los 10 campos (Convenio, Número de empleado, Primer Apellido, Segundo Apellido, Primer Nombre, Segundo Nombre, RFC, CURP, Correo electrónico, Rango Salarial), todos con tipo y longitud correctos.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-005,HU_01,Layout con los 10 campos obligatorios/opcionales y longitudes correctas,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con los 10 campos completos y válidos,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-005,HU_01,Layout con los 10 campos obligatorios/opcionales y longitudes correctas,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-005,HU_01,Layout con los 10 campos obligatorios/opcionales y longitudes correctas,,4,Verificar el resultado de la validación de estructura del layout.,N/A,El layout se considera estructuralmente válido y continúa con la validación de identidad y negocio
+TC-006,HU_01,Registro con campo obligatorio faltante: Convenio,"Layout Excel con 1 registro válido en todos los campos excepto 'Convenio' (obligatorio, numérico, 1-8 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-006,HU_01,Registro con campo obligatorio faltante: Convenio,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'Convenio',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-006,HU_01,Registro con campo obligatorio faltante: Convenio,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-006,HU_01,Registro con campo obligatorio faltante: Convenio,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: Convenio"" y se incluye en la notificación a la empresa"
+TC-007,HU_01,Registro con campo obligatorio faltante: Número de empleado,"Layout Excel con 1 registro válido en todos los campos excepto 'Número de empleado' (obligatorio, alfanumérico, 1-10 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-007,HU_01,Registro con campo obligatorio faltante: Número de empleado,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'Número de empleado',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-007,HU_01,Registro con campo obligatorio faltante: Número de empleado,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-007,HU_01,Registro con campo obligatorio faltante: Número de empleado,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: Número de empleado"" y se incluye en la notificación a la empresa"
+TC-008,HU_01,Registro con campo obligatorio faltante: Primer Apellido,"Layout Excel con 1 registro válido en todos los campos excepto 'Primer Apellido' (obligatorio, alfanumérico, 2-30 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-008,HU_01,Registro con campo obligatorio faltante: Primer Apellido,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'Primer Apellido',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-008,HU_01,Registro con campo obligatorio faltante: Primer Apellido,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-008,HU_01,Registro con campo obligatorio faltante: Primer Apellido,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: Primer Apellido"" y se incluye en la notificación a la empresa"
+TC-009,HU_01,Registro con campo obligatorio faltante: Primer Nombre,"Layout Excel con 1 registro válido en todos los campos excepto 'Primer Nombre' (obligatorio, alfanumérico, 2-30 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-009,HU_01,Registro con campo obligatorio faltante: Primer Nombre,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'Primer Nombre',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-009,HU_01,Registro con campo obligatorio faltante: Primer Nombre,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-009,HU_01,Registro con campo obligatorio faltante: Primer Nombre,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: Primer Nombre"" y se incluye en la notificación a la empresa"
+TC-010,HU_01,Registro con campo obligatorio faltante: RFC,"Layout Excel con 1 registro válido en todos los campos excepto 'RFC' (obligatorio, alfanumérico, exactamente 13 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-010,HU_01,Registro con campo obligatorio faltante: RFC,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'RFC',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-010,HU_01,Registro con campo obligatorio faltante: RFC,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-010,HU_01,Registro con campo obligatorio faltante: RFC,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: RFC"" y se incluye en la notificación a la empresa"
+TC-011,HU_01,Registro con campo obligatorio faltante: CURP,"Layout Excel con 1 registro válido en todos los campos excepto 'CURP' (obligatorio, alfanumérico, exactamente 18 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-011,HU_01,Registro con campo obligatorio faltante: CURP,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'CURP',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-011,HU_01,Registro con campo obligatorio faltante: CURP,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-011,HU_01,Registro con campo obligatorio faltante: CURP,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: CURP"" y se incluye en la notificación a la empresa"
+TC-012,HU_01,Registro con campo obligatorio faltante: Correo electrónico,"Layout Excel con 1 registro válido en todos los campos excepto 'Correo electrónico' (obligatorio, alfanumérico, máximo 40 posiciones), el cual se deja vacío.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-012,HU_01,Registro con campo obligatorio faltante: Correo electrónico,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro sin el campo 'Correo electrónico',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-012,HU_01,Registro con campo obligatorio faltante: Correo electrónico,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-012,HU_01,Registro con campo obligatorio faltante: Correo electrónico,,4,Verificar el reporte/detalle de rechazos del registro procesado.,N/A,"El registro se marca como no válido, se agrega al detalle de rechazos con la causa ""campo obligatorio faltante: Correo electrónico"" y se incluye en la notificación a la empresa"
+TC-013,HU_01,Registro válido sin campos opcionales,"Layout Excel con 1 registro que omite los campos opcionales (Segundo Apellido, Segundo Nombre, Rango Salarial) pero cumple todos los obligatorios.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-013,HU_01,Registro válido sin campos opcionales,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman","Registro sin Segundo Apellido, Segundo Nombre y Rango Salarial","Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-013,HU_01,Registro válido sin campos opcionales,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-013,HU_01,Registro válido sin campos opcionales,,4,Verificar el resultado de validación del registro.,N/A,El registro se considera válido; los campos opcionales vacíos no generan rechazo
+TC-014,HU_01,Convenio en límites de longitud (1 y 8 posiciones),"Layout con 2 registros: uno con Convenio de 1 dígito y otro con Convenio de 8 dígitos, resto de campos válidos.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-014,HU_01,Convenio en límites de longitud (1 y 8 posiciones),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro A: Convenio de 1 posición; Registro B: Convenio de 8 posiciones,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-014,HU_01,Convenio en límites de longitud (1 y 8 posiciones),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-014,HU_01,Convenio en límites de longitud (1 y 8 posiciones),,4,Verificar validación de longitud del campo Convenio para ambos registros.,N/A,Ambos registros pasan la validación de longitud de Convenio (límites válidos: 1 y 8 aceptados)
+TC-015,HU_01,Convenio excede longitud máxima o no es numérico,Layout con 1 registro con Convenio de 9 dígitos y otro registro con Convenio alfabético.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-015,HU_01,Convenio excede longitud máxima o no es numérico,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro A: Convenio de 9 posiciones; Registro B: Convenio no numérico,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-015,HU_01,Convenio excede longitud máxima o no es numérico,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-015,HU_01,Convenio excede longitud máxima o no es numérico,,4,Verificar el detalle de rechazos.,N/A,Ambos registros se marcan como no válidos por incumplir la especificación del campo Convenio (longitud/tipo)
+TC-016,HU_01,Convenio no coincide con registros del banco,"Layout Excel válido en estructura, con Convenio inexistente en el catálogo de convenios del banco.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-016,HU_01,Convenio no coincide con registros del banco,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con Convenio no registrado en banco,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-016,HU_01,Convenio no coincide con registros del banco,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-016,HU_01,Convenio no coincide con registros del banco,,4,Verificar la notificación enviada a la empresa.,N/A,"La solicitud completa no se procesa; se envía a la empresa el correo ""Respuesta a solicitud de pre-registro"" indicando que no fue posible procesar la solicitud, sin reporte adjunto"
+TC-017,HU_01,Número de empleado en límites de longitud (1 y 10 posiciones),"Layout con 2 registros: Número de empleado de 1 carácter y de 10 caracteres, resto de campos válidos.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-017,HU_01,Número de empleado en límites de longitud (1 y 10 posiciones),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro A: Núm. empleado 1 carácter; Registro B: 10 caracteres,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-017,HU_01,Número de empleado en límites de longitud (1 y 10 posiciones),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-017,HU_01,Número de empleado en límites de longitud (1 y 10 posiciones),,4,Verificar validación de longitud del campo.,N/A,Ambos registros pasan la validación de longitud
+TC-018,HU_01,Primer/Segundo Apellido y Nombre en límites de longitud (2 y 30 posiciones),"Layout con registros que prueban longitud mínima (2) y máxima (30) en Primer Apellido, Segundo Apellido, Primer Nombre y Segundo Nombre.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-018,HU_01,Primer/Segundo Apellido y Nombre en límites de longitud (2 y 30 posiciones),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registros con campos de nombre/apellido en 2 y 30 posiciones,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-018,HU_01,Primer/Segundo Apellido y Nombre en límites de longitud (2 y 30 posiciones),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-018,HU_01,Primer/Segundo Apellido y Nombre en límites de longitud (2 y 30 posiciones),,4,Verificar validación de longitud de cada campo.,N/A,Todos los registros pasan la validación de longitud
+TC-019,HU_01,Validación de longitud excedida en Primer Nombre,"Layout con 1 registro cuyo Primer Nombre excede 30 caracteres, resto de campos válidos.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-019,HU_01,Validación de longitud excedida en Primer Nombre,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con Primer Nombre de 31+ caracteres,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-019,HU_01,Validación de longitud excedida en Primer Nombre,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-019,HU_01,Validación de longitud excedida en Primer Nombre,,4,Verificar el detalle de rechazos.,N/A,"El registro se marca como no válido con la causa ""longitud excedida en primer nombre"""
+TC-020,HU_01,Validación de longitud exacta en RFC y CURP,Layout con registros: uno con RFC de 12 caracteres (inválido) y CURP de 18 (válido); otro con RFC de 13 (válido) y CURP de 17 (inválido).,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-020,HU_01,Validación de longitud exacta en RFC y CURP,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro A: RFC 12 posiciones / CURP 18; Registro B: RFC 13 / CURP 17,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-020,HU_01,Validación de longitud exacta en RFC y CURP,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-020,HU_01,Validación de longitud exacta en RFC y CURP,,4,Verificar el detalle de rechazos por campo.,N/A,"El RFC de 12 posiciones se marca no válido por ""longitud distinta de 13""; el CURP de 17 posiciones se marca no válido por longitud distinta de 18"
+TC-021,HU_01,RFC con formato inválido,"Layout con 1 registro cuyo RFC no cumple la estructura alfanumérica esperada (13 posiciones con patrón RFC), aunque tenga longitud correcta.",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-021,HU_01,RFC con formato inválido,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con RFC de 13 caracteres pero formato/patrón inválido,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-021,HU_01,RFC con formato inválido,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-021,HU_01,RFC con formato inválido,,4,Verificar el detalle de rechazos.,N/A,"El registro se marca como no válido por ""formato de RFC inválido"""
+TC-022,HU_01,Validación de longitud máxima en correo electrónico,Layout con 1 registro cuyo correo electrónico excede 40 caracteres.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-022,HU_01,Validación de longitud máxima en correo electrónico,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con correo electrónico de 41+ caracteres,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-022,HU_01,Validación de longitud máxima en correo electrónico,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-022,HU_01,Validación de longitud máxima en correo electrónico,,4,Verificar el detalle de rechazos.,N/A,"El registro se marca como no válido por ""longitud excedida"" en correo electrónico"
+TC-023,HU_01,Rango Salarial opcional con longitud máxima (40 posiciones),Layout con 1 registro con Rango Salarial de 40 caracteres (límite) y otro de 41 caracteres.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-023,HU_01,Rango Salarial opcional con longitud máxima (40 posiciones),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro A: Rango Salarial 40 caracteres; Registro B: 41 caracteres,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-023,HU_01,Rango Salarial opcional con longitud máxima (40 posiciones),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-023,HU_01,Rango Salarial opcional con longitud máxima (40 posiciones),,4,Verificar validación del campo opcional.,N/A,El registro con 40 caracteres es válido; el de 41 caracteres se marca no válido por longitud excedida
+TC-024,HU_01,Cumplimiento de reglas del layout (pestaña 'Reglas'),Layout con registros que cumplen todas las reglas específicas descritas en la pestaña 'Reglas' del Excel anexo a la HU.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-024,HU_01,Cumplimiento de reglas del layout (pestaña 'Reglas'),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registros conforme a la pestaña 'Reglas',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-024,HU_01,Cumplimiento de reglas del layout (pestaña 'Reglas'),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-024,HU_01,Cumplimiento de reglas del layout (pestaña 'Reglas'),,4,Verificar validación de reglas del layout.,N/A,Los registros cumplen lo establecido en la pestaña 'Reglas' y continúan el flujo
+TC-025,HU_01,Incumplimiento de reglas del layout (pestaña 'Reglas'),Layout con al menos 1 registro que incumple una regla específica de la pestaña 'Reglas' del Excel anexo.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-025,HU_01,Incumplimiento de reglas del layout (pestaña 'Reglas'),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro que incumple una regla de la pestaña 'Reglas',"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-025,HU_01,Incumplimiento de reglas del layout (pestaña 'Reglas'),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-025,HU_01,Incumplimiento de reglas del layout (pestaña 'Reglas'),,4,Verificar el detalle de rechazos.,N/A,"El registro se marca como no válido, indicando el motivo de incumplimiento según la pestaña 'Reglas'"
+TC-026,HU_01,RFC y CURP válidos con coincidencia en RENAPO,Layout con 1 registro con RFC/CURP con formato correcto y existentes/coincidentes en RENAPO (usar datos de prueba certificados por el ambiente de RENAPO).,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-026,HU_01,RFC y CURP válidos con coincidencia en RENAPO,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con RFC/CURP válidos y coincidentes en RENAPO,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-026,HU_01,RFC y CURP válidos con coincidencia en RENAPO,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-026,HU_01,RFC y CURP válidos con coincidencia en RENAPO,,4,Verificar el resultado de la validación de identidad.,N/A,El registro supera la validación de identidad contra RENAPO
+TC-027,HU_01,CURP no coincide en RENAPO,Layout con 1 registro cuyo CURP tiene formato válido pero no existe/no coincide en RENAPO.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-027,HU_01,CURP no coincide en RENAPO,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro con CURP válido en formato pero sin coincidencia en RENAPO,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-027,HU_01,CURP no coincide en RENAPO,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-027,HU_01,CURP no coincide en RENAPO,,4,Verificar el detalle de rechazos.,N/A,"El registro se marca como no válido por ""CURP no encontrada en RENAPO"""
+TC-028,HU_01,RENAPO no disponible / timeout (resiliencia),Layout con registros válidos; ambiente/mock de RENAPO configurado para simular caída de servicio o timeout.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-028,HU_01,RENAPO no disponible / timeout (resiliencia),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registros válidos con servicio RENAPO simulado como no disponible,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-028,HU_01,RENAPO no disponible / timeout (resiliencia),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-028,HU_01,RENAPO no disponible / timeout (resiliencia),,4,Verificar comportamiento del sistema ante la falla del servicio externo.,N/A,"El sistema maneja el error de forma controlada (reintento o marca de pendiente/error de validación), sin caída del proceso batch completo"
+TC-029,HU_01,Cliente con cuenta de nómina existente activa (2100/2110),Layout con 1 registro cuyo RFC/CURP corresponde a un cliente con Producto 2100/Subproducto 2110 en estatus 'activo' en el core bancario.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-029,HU_01,Cliente con cuenta de nómina existente activa (2100/2110),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro de empleado con cuenta 2100/2110 activa,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-029,HU_01,Cliente con cuenta de nómina existente activa (2100/2110),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-029,HU_01,Cliente con cuenta de nómina existente activa (2100/2110),,4,Verificar el detalle de rechazos y la notificación a la empresa.,N/A,"El registro se marca como ""cliente con cuenta de nómina existente"", no se permite el pre-registro y se notifica a la empresa"
+TC-030,HU_01,Cliente con cuenta de nómina previa cancelada (2100/2110),Layout con 1 registro cuyo RFC/CURP corresponde a un cliente con Producto 2100/Subproducto 2110 en estatus 'cancelado'.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-030,HU_01,Cliente con cuenta de nómina previa cancelada (2100/2110),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro de empleado con cuenta 2100/2110 cancelada,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-030,HU_01,Cliente con cuenta de nómina previa cancelada (2100/2110),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-030,HU_01,Cliente con cuenta de nómina previa cancelada (2100/2110),,4,Verificar el resultado de la validación de cuenta existente.,N/A,El registro sí puede pre-registrarse (la cuenta cancelada no bloquea el proceso)
+TC-031,HU_01,Empleado sin cuenta de nómina previa,Layout con 1 registro cuyo RFC/CURP no tiene ninguna cuenta 2100/2110 asociada.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-031,HU_01,Empleado sin cuenta de nómina previa,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro de empleado sin cuenta de nómina previa,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-031,HU_01,Empleado sin cuenta de nómina previa,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-031,HU_01,Empleado sin cuenta de nómina previa,,4,Verificar continuidad del registro en el proceso.,N/A,El registro continúa en el proceso de validación de negocio
+TC-032,HU_01,Cumplimiento de todas las reglas de negocio internas,Layout con 1 registro que cumple todas las reglas de negocio internas descritas en la pestaña 'Reglas' del layout.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-032,HU_01,Cumplimiento de todas las reglas de negocio internas,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro que cumple todas las reglas de negocio,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-032,HU_01,Cumplimiento de todas las reglas de negocio internas,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-032,HU_01,Cumplimiento de todas las reglas de negocio internas,,4,Verificar el resultado final de validación.,N/A,El registro se considera válido
+TC-033,HU_01,Incumplimiento de una regla de negocio interna,Layout con 1 registro que incumple una regla de negocio interna (según pestaña 'Reglas').,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-033,HU_01,Incumplimiento de una regla de negocio interna,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Registro que incumple una regla de negocio,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-033,HU_01,Incumplimiento de una regla de negocio interna,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-033,HU_01,Incumplimiento de una regla de negocio interna,,4,Verificar el detalle de rechazos.,N/A,El registro se marca como no válido y se registra el motivo de rechazo correspondiente
+TC-034,HU_01,"Registro previamente rechazado, corregido y reenviado",Existe en base de datos un registro marcado como no válido de un envío previo. Se reenvía un nuevo layout con el mismo empleado corregido.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-034,HU_01,"Registro previamente rechazado, corregido y reenviado",,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman","Layout con el registro previamente rechazado, ahora corregido","Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-034,HU_01,"Registro previamente rechazado, corregido y reenviado",,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-034,HU_01,"Registro previamente rechazado, corregido y reenviado",,4,Consultar el estatus histórico del registro en base de datos.,Folio/registro previo,"El registro queda actualizado a estatus válido/OK, conservando el tracking histórico del rechazo anterior"
+TC-035,HU_01,Almacenamiento de registros válidos y generación de folio,Layout con registros válidos (ver TC-005).,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-035,HU_01,Almacenamiento de registros válidos y generación de folio,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Layout con registros válidos,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-035,HU_01,Almacenamiento de registros válidos y generación de folio,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-035,HU_01,Almacenamiento de registros válidos y generación de folio,,4,Consultar base de datos / respuesta de folio generado.,N/A,"Los registros válidos se almacenan en base de datos, se genera un folio con fecha y hora, y queda asociado a la solicitud del layout"
+TC-036,HU_01,Layout totalmente inválido,"Layout Excel donde todos los registros incumplen alguna validación (estructura, identidad o negocio).",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-036,HU_01,Layout totalmente inválido,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Layout con todos los registros inválidos,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-036,HU_01,Layout totalmente inválido,,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-036,HU_01,Layout totalmente inválido,,4,Verificar base de datos y notificación enviada.,N/A,No se almacena ningún registro; se notifica a la empresa con el detalle de todos los rechazos
+TC-037,HU_01,Layout con registros mixtos (válidos e inválidos),Layout Excel con al menos 1 registro válido y al menos 1 registro inválido en el mismo archivo.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-037,HU_01,Layout con registros mixtos (válidos e inválidos),,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Layout con registros mixtos válidos/inválidos,"Se obtiene un código 200 OK y el mensaje en el Response:
+{
+ ""message"": ""Archivo recibido, procesamiento iniciado""
+}"
+TC-037,HU_01,Layout con registros mixtos (válidos e inválidos),,3,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"Se obtiene un código 200 OK y el response manda notificación con código 202 ACCEPTED: ""The layout ingestion and validation batch process has been triggered and is being executed."" / ""Process started successfully"""
+TC-037,HU_01,Layout con registros mixtos (válidos e inválidos),,4,Verificar base de datos y notificación enviada.,N/A,Se almacenan únicamente los registros válidos y se genera folio; los inválidos se reportan en el detalle de rechazos
+TC-038,HU_01,Recuperación del layout original por folio dentro de la ventana de 2 meses,Existe un folio de pre-registro generado hace menos de 2 meses.,1,Solicitar (usuario autorizado) la recuperación del archivo por folio.,Folio vigente (< 2 meses),El sistema devuelve el layout original asociado al folio
+TC-039,HU_01,Recuperación del layout fuera de la ventana de 2 meses,Existe un folio de pre-registro generado hace más de 2 meses.,1,Solicitar la recuperación del archivo por folio.,Folio con antigüedad > 2 meses,El sistema no devuelve el archivo / indica que la información ya no está disponible
+TC-040,HU_01,Apertura de cuenta antes de vencer la vigencia (T0 + 1.5 meses),Existe un pre-registro válido con fecha T0.,1,Simular en ScotiaMóvil la apertura de cuenta del empleado antes de T0 + 1.5 meses.,Fecha de intento < T0+1.5 meses,La apertura se permite
+TC-041,HU_01,Apertura de cuenta después de vencer la vigencia (T0 + 1.5 meses),Existe un pre-registro válido con fecha T0.,1,Simular en ScotiaMóvil la apertura de cuenta del empleado después de T0 + 1.5 meses.,Fecha de intento > T0+1.5 meses,El pre-registro ha expirado; no se permite abrir la cuenta
+TC-042,HU_01,Apertura de cuenta justo en el límite de vigencia (boundary T0+1.5 meses),Existe un pre-registro válido con fecha T0.,1,Simular el intento de apertura exactamente en la fecha límite T0 + 1.5 meses.,Fecha de intento = T0+1.5 meses,Se valida el comportamiento exacto del límite (debe documentarse si el límite es inclusivo o exclusivo) y el sistema responde de forma consistente con la regla de negocio
+TC-043,HU_02,Envío inmediato de notificación tras procesamiento exitoso/parcial,Existe un layout ya procesado (HU_01) con al menos un registro válido.,1,Verificar bandeja de correo de la empresa inmediatamente después de finalizado el procesamiento.,Folio de pre-registro,Se recibe el correo de notificación de forma inmediata tras finalizar el procesamiento
+TC-044,HU_02,Asunto correcto del correo de resultado,Correo de notificación de resultado recibido (TC-043).,1,Revisar el asunto del correo recibido.,Nombre de la empresa,"El asunto es ""Respuesta a solicitud de pre-registro [nombre empresa]"""
+TC-045,HU_02,Contenido completo del cuerpo del correo de resultado,"Correo de notificación de resultado recibido, proveniente de un layout con registros aceptados y rechazados.",1,Revisar el cuerpo del correo elemento por elemento.,N/A,"El correo contiene: imagen ilustrativa; nombre de la empresa como título; texto informativo del resultado; recuadro con folio, fecha y hora; recuadro con totales de aceptados y rechazados; recuadro con siguientes pasos; aviso de privacidad"
+TC-046,HU_02,Reporte Excel adjunto no editable y descargable,Correo de notificación de resultado recibido con reporte adjunto.,1,Descargar el archivo Excel adjunto y verificar edición.,N/A,"El archivo se descarga exitosamente, puede abrirse, pero no permite edición del contenido"
+TC-047,HU_02,Contenido informativo correcto del reporte Excel,Reporte Excel adjunto descargado (TC-046).,1,Abrir el archivo y revisar encabezado de datos generales.,N/A,"El archivo contiene nombre de la empresa, número de convenio y fecha/hora de la solicitud"
+TC-048,HU_02,Detalle de registros rechazados en el reporte,Layout procesado con al menos un registro rechazado.,1,Revisar el detalle de rechazos dentro del reporte Excel.,N/A,El archivo incluye el detalle del error específico por cada registro rechazado
+TC-049,HU_02,Información de empleados en el reporte,Reporte Excel adjunto descargado.,1,Revisar el detalle por empleado en el reporte.,N/A,"Se muestra el nombre del empleado, el estatus del registro (aceptado/rechazado) y el error encontrado cuando aplica"
+TC-050,HU_02,Notificación cuando la solicitud no pudo procesarse (convenio inválido),Layout enviado con Convenio inválido o inexistente (ver TC-016).,1,Verificar bandeja de correo de la empresa.,N/A,Se envía inmediatamente un correo indicando que no fue posible procesar la solicitud
+TC-051,HU_02,Contenido del correo cuando la solicitud no se procesó,Correo de error recibido (TC-050).,1,Revisar asunto y cuerpo del correo de error.,N/A,"Asunto: ""Respuesta a solicitud de pre-registro"". Cuerpo: imagen ilustrativa, nombre de empresa o título genérico, texto de solicitud no procesada, número de convenio, aviso de privacidad"
+TC-052,HU_02,Correo sin reporte adjunto en caso de error,Correo de error recibido (TC-050).,1,Verificar los adjuntos del correo.,N/A,El correo no contiene ningún archivo adjunto
+TC-053,HU_03,Primer correo de avance posterior a la notificación inicial,La empresa ya recibió la primera notificación de resultado (HU_02) con al menos un pre-registro pendiente de apertura.,1,Esperar el primer ciclo de recurrencia (72h) y revisar bandeja de correo de la empresa.,N/A,Se recibe el primer correo de avance de apertura de cuentas
+TC-054,HU_03,Recurrencia de envío: cada 72h durante las primeras 2 semanas,Primera notificación de avance ya enviada; existen pre-registros pendientes.,1,Medir el intervalo entre notificaciones de avance durante las semanas 1 y 2.,N/A,Las notificaciones se envían cada 72 horas durante ese periodo
+TC-055,HU_03,Recurrencia de envío: cada 48h durante semanas 3 y 4,Han transcurrido las primeras 2 semanas de recurrencia; existen pre-registros pendientes.,1,Medir el intervalo entre notificaciones de avance durante las semanas 3 y 4.,N/A,Las notificaciones se envían cada 48 horas durante ese periodo
+TC-056,HU_03,Recurrencia de envío: cada 24h durante semanas 5 y 6,Han transcurrido 4 semanas de recurrencia; existen pre-registros pendientes.,1,Medir el intervalo entre notificaciones de avance durante las semanas 5 y 6.,N/A,Las notificaciones se envían cada 24 horas durante ese periodo
+TC-057,HU_03,Suspensión de envíos al completarse todas las aperturas,Todos los empleados de un pre-registro completan la apertura de cuenta antes de finalizar el periodo de 1.5 meses.,1,Verificar si se generan nuevas notificaciones de avance tras completarse todas las aperturas.,N/A,El sistema suspende el envío recurrente de avance de forma inmediata
+TC-058,HU_03,Corte de envíos al cumplirse 1.5 meses,Han transcurrido 1.5 meses desde la primera notificación y existen aperturas aún pendientes.,1,Verificar si se envían notificaciones de avance después de 1.5 meses.,N/A,"El sistema deja de enviar notificaciones semanales de avance, aunque existan pendientes"
+TC-059,HU_03,Asunto correcto del correo de avance,Correo de avance recibido.,1,Revisar el asunto del correo.,N/A,"El asunto es ""Avance de apertura de cuentas de nómina"""
+TC-060,HU_03,Contenido completo del cuerpo del correo de avance,Correo de avance recibido con empleados en distintos estatus.,1,Revisar el cuerpo del correo elemento por elemento.,N/A,El correo contiene: imagen ilustrativa; nombre de la empresa o título genérico; texto de seguimiento; recuadro con cuentas aperturadas y pendientes; aviso de privacidad
+TC-061,HU_03,Reporte adjunto solicita contraseña solo si incluye CLABE compartida,Dos casos: (A) reporte de avance con al menos un empleado que autorizó compartir CLABE; (B) reporte sin ningún dato de CLABE compartida.,1,Descargar y abrir el reporte Excel adjunto en ambos casos.,Caso A: con CLABE compartida / Caso B: sin CLABE compartida,Caso A: el archivo solicita contraseña para abrirse. Caso B: el archivo no solicita contraseña
+TC-062,HU_03,Reporte de avance no editable y descargable,Reporte de avance adjunto recibido.,1,Descargar el archivo y verificar edición del contenido.,N/A,La descarga se realiza exitosamente y el archivo no permite edición
+TC-063,HU_03,Contenido informativo correcto del reporte de avance,Reporte de avance descargado.,1,Revisar encabezado de datos generales del reporte.,N/A,"El archivo contiene nombre de la empresa, número de convenio y fecha/hora de la solicitud de pre-registro"
+TC-064,HU_03,Detalle de estatus por empleado en el reporte de avance,"Reporte de avance descargado, con empleados en distintos estatus y niveles de autorización de CLABE.",1,Revisar el detalle por empleado en el reporte.,N/A,"Se muestra nombre del empleado, estatus actual, indicador de autorización para compartir CLABE, y la cuenta CLABE solo si existe autorización"
+TC-065,HU_03,Actualización del estatus reflejada en la siguiente notificación,Un empleado cambia de estatus (de pendiente a aperturado) entre dos ciclos de notificación de avance.,1,Comparar el reporte de avance del ciclo anterior contra el del ciclo actual.,N/A,El reporte más reciente refleja el estatus actualizado del empleado
+TC-066,HU_04,Envío inmediato de notificación tras registro válido,Layout procesado (HU_01) con al menos un registro de empleado marcado como válido.,1,Verificar bandeja de correo del empleado inmediatamente después de finalizado el pre-registro.,Correo registrado en el layout,Se envía el correo electrónico al empleado inmediatamente después de marcarse como pre-registro exitoso
+TC-067,HU_04,No envío de notificación a registros inválidos,Layout procesado con al menos un registro de empleado rechazado.,1,Verificar bandeja de correo del empleado con registro rechazado.,N/A,No se envía ningún correo de notificación a ese empleado
+TC-068,HU_04,Envío únicamente al correo registrado en el layout,Layout con un registro válido y correo electrónico específico.,1,Verificar la dirección destino del correo enviado.,Correo electrónico del layout,El correo se envía exclusivamente a la dirección de correo registrada por la empresa en el layout
+TC-069,HU_04,Asunto correcto del correo de notificación al empleado,Correo de notificación al empleado recibido.,1,Revisar el asunto del correo.,N/A,"El asunto es ""Apertura tu cuenta de Scotia Nómina"""
+TC-070,HU_04,Contenido completo del cuerpo del correo al nominatario,Correo de notificación al empleado recibido.,1,Revisar el cuerpo del correo elemento por elemento.,N/A,"Contiene: imagen ilustrativa; nombre del empleado; texto informativo; recuadro de siguientes pasos; CTA ""Iniciar contratación""; CTAs a Google Play y App Store; recuadro de no cumplimiento de requisitos (INE, convenio, folios); recuadro de beneficios con enlace ""Ver más beneficios""; aviso de privacidad en el footer"
+TC-071,HU_04,Formato e inclusión de folios de contacto,Correo de notificación al empleado recibido.,1,Revisar la sección de no cumplimiento de requisitos.,N/A,"Se muestra el convenio, el folio de pre-registro de la empresa en formato [Convenio-fecha-hora-min] y el folio particular del empleado"
+TC-072,HU_04,Redirección correcta del CTA 'Iniciar contratación',Correo de notificación al empleado recibido en un dispositivo con ScotiaMóvil instalado.,1,Dar clic en el CTA 'Iniciar contratación'.,N/A,El empleado es dirigido al flujo de contratación dentro de ScotiaMóvil
+TC-073,HU_04,Redirección correcta a tiendas de aplicaciones,Correo de notificación al empleado recibido en dispositivo sin ScotiaMóvil instalada (Android e iOS).,1,Dar clic en los CTAs secundarios de tienda de aplicaciones desde ambos sistemas operativos.,N/A,El empleado es redirigido a Google Play (Android) o App Store (iOS) según su dispositivo
+TC-074,HU_04,Redirección correcta a la página de beneficios,Correo de notificación al empleado recibido.,1,Dar clic en el enlace 'Ver más beneficios'.,N/A,El empleado es dirigido a la URL web de beneficios de la cuenta Scotia Nómina
+TC-075,HU_05,Envío de recordatorio solo a empleados con apertura pendiente,Empleado pre-registrado correctamente (HU_04) que aún no completa la apertura de cuenta.,1,Ejecutar el proceso de recordatorios y verificar bandeja del empleado.,N/A,Se envía un correo de recordatorio al empleado con apertura pendiente
+TC-076,HU_05,No envío de recordatorio a empleados con cuenta ya aperturada,Empleado que ya completó la apertura de su cuenta.,1,Ejecutar el proceso de recordatorios y verificar bandeja del empleado.,N/A,No se envía ningún correo de recordatorio a ese empleado
+TC-077,HU_05,Recurrencia de recordatorios: 72h / 48h / 24h por tramos de 2 semanas,Empleado con apertura pendiente desde la primera notificación (HU_04).,1,Medir el intervalo entre recordatorios durante los 3 tramos del periodo de 1.5 meses.,N/A,"Los recordatorios se envían cada 72h (semanas 1-2), cada 48h (semanas 3-4) y cada 24h (semanas 5-6)"
+TC-078,HU_05,Suspensión de recordatorios al completar la apertura,Empleado con recordatorios activos que completa la apertura de cuenta a mitad del periodo.,1,Verificar si se generan nuevos recordatorios tras completar la apertura.,N/A,El sistema suspende el envío de recordatorios de forma inmediata
+TC-079,HU_05,Corte de recordatorios tras 1.5 meses sin completar apertura,Han transcurrido 1.5 meses desde la primera notificación al empleado y la apertura sigue pendiente.,1,Verificar si se envían recordatorios después de 1.5 meses.,N/A,"El sistema detiene automáticamente el envío de recordatorios, aun con estatus pendiente"
+TC-080,HU_05,Asunto correcto del correo de recordatorio,Correo de recordatorio recibido.,1,Revisar el asunto del correo.,N/A,"El asunto es ""Apertura tu cuenta Scotia Nómina"""
+TC-081,HU_05,Contenido completo del correo de recordatorio,Correo de recordatorio recibido.,1,Revisar el cuerpo del correo elemento por elemento.,N/A,"Contiene los mismos elementos que la notificación inicial: imagen, nombre del empleado, texto de recordatorio, CTA de contratación, CTAs de tiendas, recuadro de requisitos, recuadro de beneficios y aviso de privacidad"
+TC-082,HU_05,CTAs y redirecciones desde el recordatorio,Correo de recordatorio recibido.,1,"Dar clic en el CTA 'Iniciar contratación', en los CTAs de tienda y en 'Ver más beneficios'.",N/A,"Redirige correctamente al flujo de contratación en ScotiaMóvil, a la tienda de apps según dispositivo, y a la URL de beneficios"
+TC-083,HU_06,Consulta de folio de pre-registro de empresa existente y activo,"Existe un pre-registro de empresa activo, creado hace menos de 2 meses.",1,Ingresar el folio de pre-registro de la empresa en el sistema de consulta.,Folio de empresa vigente,"El sistema muestra el mensaje ""El folio # que ingresaste ha sido pre-registrado para la apertura de una cuenta de nómina"", junto con nombre de la empresa, número de convenio y fecha/hora de creación"
+TC-084,HU_06,Consulta de folio particular de empleado existente,"Existe un empleado pre-registrado dentro de un pre-registro activo, creado hace menos de 2 meses.",1,Ingresar el folio particular del empleado en el sistema de consulta.,Folio de empleado vigente,"El sistema muestra el mensaje de pre-registro válido junto con nombre de la empresa, convenio, fecha/hora, nombre completo del empleado y su correo registrado"
+TC-085,HU_06,Consulta de folio dentro del periodo de vigencia (menor a 2 meses),Pre-registro creado hace menos de 2 meses.,1,Consultar el folio correspondiente.,Folio con antigüedad < 2 meses,El sistema permite visualizar la información completa del pre-registro
+TC-086,HU_06,Consulta de folio fuera del periodo de vigencia (mayor a 2 meses),Pre-registro creado hace más de 2 meses.,1,Consultar el folio correspondiente.,Folio con antigüedad > 2 meses,"El sistema muestra el mensaje ""El folio no ha sido pre-registrado para la apertura de nómina por ninguna empresa"", sin información adicional"
+TC-087,HU_06,Consulta de folio inexistente,No existe ningún pre-registro asociado al folio a consultar.,1,Ingresar un folio inexistente en el sistema de consulta.,Folio no existente,"El sistema muestra el mensaje ""El folio no ha sido pre-registrado para la apertura de nómina por ninguna empresa"""
+TC-088,HU_06,Consulta de folio que no corresponde a un pre-registro,El folio ingresado tiene formato válido pero no está asociado a ningún pre-registro en base de datos.,1,Ingresar el folio en el sistema de consulta.,"Folio con formato válido, sin asociación","El sistema muestra el mensaje ""El folio no ha sido pre-registrado para la apertura de nómina por ninguna empresa"""
+TC-089,TECH,Generación de Token exitosa,Credenciales/ambiente configurados correctamente en Postman.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-090,TECH,Generación de Token fallida (credenciales inválidas),Credenciales de autenticación inválidas o expiradas configuradas en Postman.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] con credenciales inválidas.,N/A,El response obtiene un código de error (401/403) y no se genera Bearer Token
+TC-091,TECH,Endpoint de upload sin token o con token inválido,Layout válido disponible; token de autorización vencido o ausente en el header del request.,1,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman","Archivo layout válido, sin header Authorization / token expirado",El endpoint responde con un código de error de autenticación (401) y no inicia el procesamiento
+TC-092,TECH,Endpoint de upload con archivo corrupto o vacío,Archivo Excel corrupto (dañado) o con 0 registros (solo encabezados).,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-092,TECH,Endpoint de upload con archivo corrupto o vacío,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/nominees/upload] cargar el archivo de layout y dar clic en el botón ""Send"" de Postman",Archivo Excel corrupto o vacío,El endpoint responde con un error controlado (400) indicando archivo inválido o no procesable
+TC-093,TECH,Trigger scheduler data-ingestion con job_id duplicado,Ya existe un job_id previamente ejecutado con el mismo identificador.,1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-093,TECH,Trigger scheduler data-ingestion con job_id duplicado,,2,"En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar el request del scheduler:
+{
+ ""job_id"": ""JOB-<fecha>-XXX"",
+ ""execution_date"": ""<timestamp>"",
+ ""origin"": ""SCHEDULER""
+}",N/A,"El sistema responde indicando que el job_id ya fue procesado o rechaza la ejecución duplicada, sin reprocesar el mismo lote dos veces"
+TC-094,TECH,Trigger scheduler con payload malformado,"Request de scheduler con estructura JSON incorrecta o campos faltantes (job_id, execution_date, origin).",1,Ejecutar el endpoint: [https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token] para la generación del Token.,N/A,El response obtiene un 200 OK y se genera exitosamente el Bearer Token
+TC-094,TECH,Trigger scheduler con payload malformado,,2,En el body del endpoint [https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/api/v1/payroll/nominees/task/pre-register/data-ingestion] mandar un JSON incompleto o malformado.,JSON sin 'job_id' u otro campo requerido,El endpoint responde con un error de validación (400) y no dispara el proceso batch
