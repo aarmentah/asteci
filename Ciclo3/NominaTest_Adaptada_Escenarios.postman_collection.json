@@ -1,0 +1,2559 @@
+{
+  "info": {
+    "_postman_id": "c3ba713d-c94c-429c-ac9e-43556be64c1b",
+    "name": "Payroll - Flujo E2E y Escenarios Adaptados",
+    "description": "Colección adaptada al flujo real observado: token del scheduler worker, carga de layout, consulta de pre-registro y confirmación. Incluye escenarios 200, 400, 401, 403, 404, 409, 500 y default, además de soporte para ejecución data-driven con CSV/JSON.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "function randomHex(length) {",
+          "  const chars = '0123456789abcdef';",
+          "  let value = '';",
+          "  for (let i = 0; i < length; i++) value += chars[Math.floor(Math.random() * chars.length)];",
+          "  return value;",
+          "}",
+          "pm.variables.set('trace_id', randomHex(16));",
+          "pm.variables.set('span_id', randomHex(16));",
+          "",
+          "// Permite ejecutar la colección con CSV/JSON en Collection Runner.",
+          "const curp = pm.iterationData.get('curp') || pm.environment.get('valid_curp');",
+          "const rfc = pm.iterationData.get('rfc') || pm.environment.get('valid_rfc');",
+          "const clabe = pm.iterationData.get('clabe') || pm.environment.get('valid_clabe');",
+          "if (curp) pm.variables.set('current_curp', curp);",
+          "if (rfc) pm.variables.set('current_rfc', rfc);",
+          "if (clabe) pm.variables.set('current_clabe', clabe);"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Flujo E2E Nomina",
+      "description": "Secuencia: token → upload → pre-registration 200 → confirm 200. Ejecutar como carpeta o colección en Collection Runner.",
+      "item": [
+        {
+          "name": "01 - Obtener token OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Token endpoint returns success', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "let token = '';",
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  token = json.access_token || json.token || json.data?.access_token || '';",
+                  "} catch (e) {",
+                  "  token = pm.response.text().replace(/^\"|\"$/g, '').trim();",
+                  "}",
+                  "pm.test('Access token exists', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "if (token) pm.environment.set('access_token', token);",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  pm.execution.setNextRequest('02 - Cargar layout de nómina (manual)');",
+                  "} else { pm.execution.setNextRequest(null); }"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{token_url}}",
+              "host": [
+                "{{token_url}}"
+              ]
+            },
+            "description": "Obtiene el token del worker. Si el endpoint requiere parámetros o Basic Auth, configúralos en el environment."
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Cargar layout de nómina (manual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Upload returns a successful/accepted response', () => pm.expect(pm.response.code).to.be.oneOf([200,201,202]));",
+                  "if ([200,201,202].includes(pm.response.code)) {",
+                  "  try {",
+                  "    const json = pm.response.json();",
+                  "    const jobId = json.job_id || json.data?.job_id || json.data?.id || '';",
+                  "    if (jobId) pm.environment.set('job_id', jobId);",
+                  "  } catch (e) {}",
+                  "  pm.execution.setNextRequest('03 - Consultar pre-registro 200');",
+                  "} else { pm.execution.setNextRequest(null); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/nominees/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "nominees",
+                "upload"
+              ]
+            },
+            "description": "Selecciona manualmente el layout antes de ejecutar. Postman Runner/Newman requiere que el archivo exista localmente. Si los datos ya están cargados, deshabilita esta petición y comienza en la consulta 200."
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Consultar pre-registro 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Pre-registration data is complete', () => {",
+                  "    pm.expect(json.data).to.be.an('object');",
+                  "    ['agreement_number','company_client_id','company_client_name','employee_name','employee_number','tdd_delivery_type']",
+                  "      .forEach(key => pm.expect(json.data).to.have.property(key));",
+                  "  });",
+                  "  if (json.data) {",
+                  "    pm.collectionVariables.set('employee_number', json.data.employee_number || '');",
+                  "    pm.collectionVariables.set('company_client_id', json.data.company_client_id || '');",
+                  "  }",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "  pm.execution.setNextRequest('04 - Confirmar cuenta 200');",
+                  "} else {",
+                  "  pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": "Flujo feliz. Usa columnas curp/rfc del CSV del Runner o valid_curp/valid_rfc del environment."
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Confirmar cuenta 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Confirmation has null data', () => pm.expect(json.data).to.eql(null));",
+                  "  pm.test('Confirmation notification is valid', () => {",
+                  "    if (json.notifications.length > 0) {",
+                  "      pm.expect(json.notifications[0].code).to.eql('200');",
+                  "      pm.expect(json.notifications[0].category).to.eql('OK');",
+                  "    }",
+                  "  });",
+                  "}",
+                  "pm.execution.setNextRequest(null);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": "Confirma la cuenta para el mismo registro consultado. Usa clabe del CSV o valid_clabe."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Escenarios Pre-Registration",
+      "item": [
+        {
+          "name": "PRE-200 - Registro encontrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Pre-registration data is complete', () => {",
+                  "    pm.expect(json.data).to.be.an('object');",
+                  "    ['agreement_number','company_client_id','company_client_name','employee_name','employee_number','tdd_delivery_type']",
+                  "      .forEach(key => pm.expect(json.data).to.have.property(key));",
+                  "  });",
+                  "  if (json.data) {",
+                  "    pm.collectionVariables.set('employee_number', json.data.employee_number || '');",
+                  "    pm.collectionVariables.set('company_client_id', json.data.company_client_id || '');",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-400-01 - RFC ausente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('400');",
+                  "    pm.expect(n.category).to.eql('BAD_REQUEST');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-400-02 - CURP inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('400');",
+                  "    pm.expect(n.category).to.eql('BAD_REQUEST');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"INVALID_CURP\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-401 - Sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('401');",
+                  "    pm.expect(n.category).to.eql('UNAUTHORIZED');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-403 - Sin scope Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('403');",
+                  "    pm.expect(n.category).to.eql('FORBIDDEN');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{insufficient_scope_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-404 - Registro inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('404');",
+                  "    pm.expect(n.category).to.eql('NOT_FOUND');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{not_found_curp}}\",\n  \"rfc\": \"{{not_found_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-409 - Registro expirado/estado inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('409');",
+                  "    pm.expect(n.category).to.eql('CONFLICT');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{expired_curp}}\",\n  \"rfc\": \"{{expired_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": "Requiere datos sembrados con vigencia expirada o estado inválido."
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-500 - Error interno controlado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('500');",
+                  "    pm.expect(n.category).to.eql('INTERNAL_SERVER_ERROR');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              },
+              {
+                "key": "x-test-scenario",
+                "value": "500",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{server_error_curp}}\",\n  \"rfc\": \"{{server_error_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": "Requiere mock/fault injection o dato preparado."
+          },
+          "response": []
+        },
+        {
+          "name": "PRE-DEFAULT - Error no esperado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('500');",
+                  "    pm.expect(n.category).to.eql('INTERNAL_SERVER_ERROR');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              },
+              {
+                "key": "x-test-scenario",
+                "value": "default",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{default_error_curp}}\",\n  \"rfc\": \"{{default_error_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/pre-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "pre-registration"
+              ]
+            },
+            "description": "El default de OpenAPI no tiene disparador determinístico; usar mock/fault injection."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Escenarios Confirm",
+      "item": [
+        {
+          "name": "CON-200 - Confirmación exitosa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Confirmation has null data', () => pm.expect(json.data).to.eql(null));",
+                  "  pm.test('Confirmation notification is valid', () => {",
+                  "    if (json.notifications.length > 0) {",
+                  "      pm.expect(json.notifications[0].code).to.eql('200');",
+                  "      pm.expect(json.notifications[0].category).to.eql('OK');",
+                  "    }",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-400-01 - CLABE ausente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('400');",
+                  "    pm.expect(n.category).to.eql('BAD_REQUEST');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-400-02 - CLABE inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('400');",
+                  "    pm.expect(n.category).to.eql('BAD_REQUEST');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\",\n  \"clabe\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-401 - Sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('401');",
+                  "    pm.expect(n.category).to.eql('UNAUTHORIZED');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-403 - Sin scope Write",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('403');",
+                  "    pm.expect(n.category).to.eql('FORBIDDEN');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{insufficient_scope_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{current_curp}}\",\n  \"rfc\": \"{{current_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-404 - Pre-registro inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('404');",
+                  "    pm.expect(n.category).to.eql('NOT_FOUND');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{not_found_curp}}\",\n  \"rfc\": \"{{not_found_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "CON-409 - Estado no confirmable",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('409');",
+                  "    pm.expect(n.category).to.eql('CONFLICT');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{conflict_curp}}\",\n  \"rfc\": \"{{conflict_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": "Requiere registro expirado, previamente confirmado o en estado no elegible."
+          },
+          "response": []
+        },
+        {
+          "name": "CON-500 - Error interno controlado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('500');",
+                  "    pm.expect(n.category).to.eql('INTERNAL_SERVER_ERROR');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              },
+              {
+                "key": "x-test-scenario",
+                "value": "500",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{server_error_curp}}\",\n  \"rfc\": \"{{server_error_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": "Requiere mock/fault injection o dato preparado."
+          },
+          "response": []
+        },
+        {
+          "name": "CON-DEFAULT - Error no esperado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP status is 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Response time is within limit', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('max_response_time_ms') || 5000));",
+                  "});",
+                  "pm.test('Content-Type is JSON', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "let json;",
+                  "pm.test('Response body is valid JSON', () => { json = pm.response.json(); pm.expect(json).to.be.an('object'); });",
+                  "if (json) {",
+                  "  pm.test('Standard response envelope exists', () => {",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('notifications');",
+                  "    pm.expect(json.notifications).to.be.an('array');",
+                  "  });",
+                  "}",
+                  "if (json) {",
+                  "  pm.test('Error notification is complete', () => {",
+                  "    pm.expect(json.data).to.eql(null);",
+                  "    pm.expect(json.notifications.length).to.be.above(0);",
+                  "    const n = json.notifications[0];",
+                  "    ['code','category','message','uuid','timestamp','severity'].forEach(key => pm.expect(n).to.have.property(key));",
+                  "    pm.expect(n.code).to.eql('500');",
+                  "    pm.expect(n.category).to.eql('INTERNAL_SERVER_ERROR');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-traceid",
+                "value": "{{trace_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-b3-spanid",
+                "value": "{{span_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-channel-id",
+                "value": "{{channel_id}}",
+                "type": "text"
+              },
+              {
+                "key": "x-originating-appl-code",
+                "value": "{{originating_app_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-country-code",
+                "value": "{{country_code}}",
+                "type": "text"
+              },
+              {
+                "key": "x-user-context",
+                "value": "{{user_context}}",
+                "type": "text"
+              },
+              {
+                "key": "x-api-version",
+                "value": "{{api_version}}",
+                "type": "text"
+              },
+              {
+                "key": "x-test-scenario",
+                "value": "default",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"curp\": \"{{default_error_curp}}\",\n  \"rfc\": \"{{default_error_rfc}}\",\n  \"clabe\": \"{{current_clabe}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payroll/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payroll",
+                "confirm"
+              ]
+            },
+            "description": "El default de OpenAPI no tiene disparador determinístico; usar mock/fault injection."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos"
+    },
+    {
+      "key": "token_url",
+      "value": "https://ccop-bcsmx-payroll-back-scheduler-nominees-worker.ccopmx.dbuist.npe-k8s.recursos/management/token"
+    },
+    {
+      "key": "employee_number",
+      "value": ""
+    },
+    {
+      "key": "company_client_id",
+      "value": ""
+    }
+  ]
+}
