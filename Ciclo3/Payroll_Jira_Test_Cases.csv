@@ -1,0 +1,116 @@
+﻿Test Case ID,Summary,Issue Type,Labels,Endpoint,Expected HTTP,Priority,Preconditions,Test Data / Body,Test Steps,Expected Result,Automation,Notes
+PAY-PRE-001,200 - Pre-registration found,Test,"API,Payroll,Postman",Payroll Pre-Registration,200,Medium,Servicio disponible; token OAuth válido con scope requerido; datos de prueba existentes y en estado elegible.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 200; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Requires a CURP/RFC pair that exists and is active in the test environment.
+PAY-PRE-002,400 - Missing RFC,Test,"API,Payroll,Postman",Payroll Pre-Registration,400,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""{{valid_curp}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 400; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-PRE-003,400 - Invalid CURP format,Test,"API,Payroll,Postman",Payroll Pre-Registration,400,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""INVALID_CURP"",
+  ""rfc"": ""{{valid_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 400; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-PRE-004,401 - Missing bearer token,Test,"API,Payroll,Postman",Payroll Pre-Registration,401,Medium,Servicio disponible. No enviar el encabezado Authorization.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 401; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-PRE-005,403 - Token without Read scope,Test,"API,Payroll,Postman",Payroll Pre-Registration,403,Medium,Servicio disponible; token OAuth válido sin el scope requerido.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 403; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Token must be valid but must not include Transversal.PayrollPreRegistration.Read.
+PAY-PRE-006,404 - Pre-registration not found,Test,"API,Payroll,Postman",Payroll Pre-Registration,404,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""{{not_found_curp}}"",
+  ""rfc"": ""{{not_found_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 404; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-PRE-007,409 - Expired or invalid state,Test,"API,Payroll,Postman",Payroll Pre-Registration,409,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{expired_curp}}"",
+  ""rfc"": ""{{expired_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 409; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Requires a seeded expired/invalid-state pre-registration.
+PAY-PRE-008,500 - Forced internal error,Test,"API,Payroll,Postman",Payroll Pre-Registration,500,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{server_error_curp}}"",
+  ""rfc"": ""{{server_error_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 500; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,"Requires fault injection, a stub, or a test-data pair configured to provoke a server error."
+PAY-PRE-009,Default - Unexpected error,Test,"API,Payroll,Postman",Payroll Pre-Registration,default,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{default_error_curp}}"",
+  ""rfc"": ""{{default_error_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/pre-registration con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP configurado por mock; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,OpenAPI default response is not a deterministic business case. Execute against a mock/fault-injection rule and adjust the expected HTTP code if the implementation maps it differently.
+PAY-CON-001,200 - Confirmation successful,Test,"API,Payroll,Postman",Payroll Confirm,200,Medium,Servicio disponible; token OAuth válido con scope requerido; datos de prueba existentes y en estado elegible.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 200; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Requires an eligible pre-registration and a valid 18-digit CLABE.
+PAY-CON-002,400 - Missing CLABE,Test,"API,Payroll,Postman",Payroll Confirm,400,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 400; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-CON-003,400 - Invalid CLABE length,Test,"API,Payroll,Postman",Payroll Confirm,400,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}"",
+  ""clabe"": ""123""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 400; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-CON-004,401 - Missing bearer token,Test,"API,Payroll,Postman",Payroll Confirm,401,Medium,Servicio disponible. No enviar el encabezado Authorization.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 401; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-CON-005,403 - Token without Write scope,Test,"API,Payroll,Postman",Payroll Confirm,403,Medium,Servicio disponible; token OAuth válido sin el scope requerido.,"{
+  ""curp"": ""{{valid_curp}}"",
+  ""rfc"": ""{{valid_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 403; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Token must be valid but must not include Transversal.PayrollPreRegistration.Write.
+PAY-CON-006,404 - Pre-registration not found,Test,"API,Payroll,Postman",Payroll Confirm,404,Medium,Servicio disponible; token OAuth válido con scope requerido.,"{
+  ""curp"": ""{{not_found_curp}}"",
+  ""rfc"": ""{{not_found_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 404; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,
+PAY-CON-007,409 - Confirmation conflict,Test,"API,Payroll,Postman",Payroll Confirm,409,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{conflict_curp}}"",
+  ""rfc"": ""{{conflict_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 409; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,"Requires a pre-registration in a state that cannot be confirmed (expired, already confirmed, or otherwise invalid)."
+PAY-CON-008,500 - Forced internal error,Test,"API,Payroll,Postman",Payroll Confirm,500,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{server_error_curp}}"",
+  ""rfc"": ""{{server_error_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP 500; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,"Requires fault injection, a stub, or seeded data configured to provoke a server error."
+PAY-CON-009,Default - Unexpected error,Test,"API,Payroll,Postman",Payroll Confirm,default,Medium,"Servicio disponible; preparar datos controlados, mock o fault injection según el escenario.","{
+  ""curp"": ""{{default_error_curp}}"",
+  ""rfc"": ""{{default_error_rfc}}"",
+  ""clabe"": ""{{valid_clabe}}""
+}","1. Configurar headers estándar.
+2. Enviar POST /api/v1/payroll/confirm con el body indicado.
+3. Validar código HTTP, envelope y notificación.",HTTP configurado por mock; Content-Type application/json; response con data y notifications; validaciones de esquema de la colección Postman exitosas.,Sí - incluido en colección Postman,Execute against a mock/fault-injection rule. The OpenAPI default response has no unique deterministic trigger.

@@ -1,0 +1,139 @@
+{
+  "id": "43dcb143-8d89-440e-885c-197ed9e56213",
+  "name": "Payroll API - NPE INT",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos",
+      "enabled": true
+    },
+    {
+      "key": "token_url",
+      "value": "https://ccop-bcsmx-payroll-back-orchestrator-nominees-api.int.dbuist.npe-k8s.recursos/oauth2/token",
+      "enabled": true
+    },
+    {
+      "key": "client_id",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "client_secret",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "oauth_scope",
+      "value": "Transversal.PayrollPreRegistration.Read Transversal.PayrollPreRegistration.Write",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "insufficient_scope_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "channel_id",
+      "value": "BackOffice",
+      "enabled": true
+    },
+    {
+      "key": "originating_app_code",
+      "value": "BDMS",
+      "enabled": true
+    },
+    {
+      "key": "country_code",
+      "value": "MX",
+      "enabled": true
+    },
+    {
+      "key": "user_context",
+      "value": "eyAic3ViLWNoYW5uZWwiIDogIk1vYmlsZSBJT1MiLCAib2ZmaWNlci1pZCIgOiAiNDU2IiwgInRyYW5zaXQtaWQiIDogIjU1NiIsIHRlbGxlci1pZCIgOiAiNzQ2NCIsICJvcmlnaW5hdGluZy1pcC1hZGRyZXNzIjoiMTIyLjEyMi4xMi4xMSJ9",
+      "enabled": true
+    },
+    {
+      "key": "api_version",
+      "value": "1.1",
+      "enabled": true
+    },
+    {
+      "key": "max_response_time_ms",
+      "value": "5000",
+      "enabled": true
+    },
+    {
+      "key": "valid_curp",
+      "value": "CACI030701MQRSTSA2",
+      "enabled": true
+    },
+    {
+      "key": "valid_rfc",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "valid_clabe",
+      "value": "002010077777777771",
+      "enabled": true
+    },
+    {
+      "key": "not_found_curp",
+      "value": "AAAA990101MDFKLB87",
+      "enabled": true
+    },
+    {
+      "key": "not_found_rfc",
+      "value": "AAAA990101AB1",
+      "enabled": true
+    },
+    {
+      "key": "expired_curp",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "expired_rfc",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "conflict_curp",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "conflict_rfc",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "server_error_curp",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "server_error_rfc",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "default_error_curp",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "default_error_rfc",
+      "value": "",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-07-17T00:00:00.000Z",
+  "_postman_exported_using": "OpenAI"
+}
