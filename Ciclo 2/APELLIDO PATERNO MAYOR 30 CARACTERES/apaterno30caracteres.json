@@ -1,0 +1,29 @@
+ {
+        "pre_registration_request": {
+            "id": "000000023713-20260819-1533",
+            "request_folio": "000000023713-20260819-1533",
+            "agreement": "23713",
+            "cif": "11956609",
+            "company_name": "TAMALES FRACCIORAMA 360949853                ",
+            "email_company": "aquiles.armenta@gmail.com",
+            "received_at": "2026-08-19T21:33:10.155Z",
+            "file_name": "14 Nombre Mayor a 30 caracteres.xlsx",
+            "status": "PROCESSED",
+            "summary": {
+                "total_records": 1,
+                "valid_records": 0,
+                "invalid_records": 1,
+                "duplicated_records": 0,
+                "opened_accounts": 0
+            },
+            "duplicated_employee_folios": [],
+            "started_at": "2026-08-19T21:33:10.155Z",
+            "finished_at": "2026-08-19T21:34:07.982Z",
+            "error_message": null,
+            "expires_at": "2026-08-19T22:13:10.155Z",
+            "created_at": "2026-08-19T21:33:10.155Z",
+            "updated_at": "2026-08-19T21:34:08.223Z"
+        },
+        "employee_list": [],
+        "invalid_employee_list": []
+    }
