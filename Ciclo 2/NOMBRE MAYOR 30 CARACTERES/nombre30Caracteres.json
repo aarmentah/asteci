@@ -1,0 +1,44 @@
+   "history_list": [
+                    {
+                        "request_folio": "000000023713-20260819-1533",
+                        "archived_at": "2026-08-19T21:34:07.959Z",
+                        "previous_status": "VALIDATION_FAILED",
+                        "previous_details": {
+                            "agreement_check": null,
+                            "excel_format_errors": {
+                                "passed": false,
+                                "failure_type": "DATA_FORMAT",
+                                "user_message": "Primer Nombre inválido",
+                                "technical_log": null,
+                                "checked_at": "2026-08-19T21:34:07.959Z",
+                                "violations": [
+                                    "Primer Nombre: no debe exceder 30 posiciones"
+                                ]
+                            },
+                            "curp_renapo_check": null,
+                            "black_list_check": null,
+                            "contact_relation_check": null
+                        },
+                        "previous_raw_data_snapshot": {
+                            "convenio": "23713",
+                            "numero_empleado": "0000000099",
+                            "primer_apellido": "ARMENTA",
+                            "segundo_apellido": "HERNANDEZ",
+                            "primer_nombre": "AQUILESISISISISISSISISISISISISISISISISSISISISISISI...",
+                            "segundo_nombre": "YONATAN",
+                            "rfc": "AEHA820428R45",
+                            "curp": "AEHA820428HHGRRQ02",
+                            "correo_electronico": "daniel.pedro@scotiabank.com.mx"
+                        }
+                    }
+                ],
+                "expires_at": "2026-08-19T22:09:07.959Z",
+                "created_at": "2026-08-19T21:33:10.159Z",
+                "updated_at": "2026-08-19T21:34:07.959Z",
+                "opened_at": null,
+                "ready_for_hire_at": null
+            }
+        ],
+        "invalid_employee_list": []
+    }
+]
